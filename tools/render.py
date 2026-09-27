@@ -6,12 +6,13 @@
 - Isolated config dir and in-memory library: never touches the user's library.db.
 - OUT is deleted first: darktable-cli never overwrites, it writes OUT_01.jpg next
   to it, and a tuning loop would silently keep measuring the old file.
-- `-d params` is parsed: any "params WRONG" line means a module was dropped.
+- `-d params` is parsed per module: `params_wrong` lists modules whose blob failed to
+  decode (those are dropped from the render). Exit code 1 if any.
 - --phone also writes OUT.phone.png at 390 px wide, the size of a feed post on a phone.
 
 Prints one JSON line: size, luminance percentiles (Rec.709, 0 to 1), clipped share.
 """
-import os, sys, json, shutil, subprocess, argparse
+import os, re, sys, json, shutil, subprocess, argparse
 import numpy as np
 from PIL import Image
 
@@ -44,9 +45,24 @@ def render(raw, xmp, out, size=1080, height=None):
     cmd += ["--core", "--configdir", CONF, "--library", ":memory:",
             "--conf", "write_sidecar_files=never", "-d", "params"]
     r = subprocess.run(cmd, capture_output=True, text=True)
-    log = r.stdout + r.stderr
-    return dict(exit=r.returncode, params_ok=log.count("params ok"),
-                params_wrong=log.lower().count("params wrong"), written=os.path.exists(out))
+    loaded, wrong = parse_params_log(r.stdout + r.stderr)
+    return dict(exit=r.returncode, modules_loaded=loaded, params_wrong=wrong,
+                written=os.path.exists(out))
+
+
+def parse_params_log(log):
+    """darktable -d params prints, per history module, a 'blendop v.N' line and a
+    'params v.N' line. Only 'params ... params WRONG' means a blob failed to decode.
+    'blendop v. 0 ... WRONG' is normal for modules without blending (rawprepare, gamma...)."""
+    loaded, wrong, cur = [], [], None
+    for line in log.splitlines():
+        m = re.search(r"successfully loaded module (\w+) from history", line)
+        if m:
+            cur = m.group(1); loaded.append(cur); continue
+        m = re.search(r"^\s*params v\. \d+:\s+version \w+\s+params (\w+)", line)
+        if m and cur and m.group(1).upper() == "WRONG":
+            wrong.append(cur)
+    return loaded, wrong
 
 
 def stats(path):
@@ -76,7 +92,7 @@ def main():
         if a.phone:
             res["phone"] = phone(a.out)
     print(json.dumps(res))
-    return 0 if res["written"] and res["params_wrong"] == 0 else 1
+    return 0 if res["written"] and not res["params_wrong"] else 1
 
 
 if __name__ == "__main__":

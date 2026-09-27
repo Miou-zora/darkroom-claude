@@ -1,0 +1,33 @@
+{
+  "_doc": "Parameter layouts, darktable 5.6, little-endian. A field counts as confirmed in the CI KPIs only if `test` names an integration test that passes in the same run. Human-checked fields without a test keep `test: null`.",
+  "crop": {
+    "version": 3, "size": 24,
+    "fields": [
+      {"name": "left", "type": "f", "test": "tests/test_darktable.py::test_crop_edges_are_normalized"},
+      {"name": "top", "type": "f", "test": "tests/test_darktable.py::test_crop_edges_are_normalized"},
+      {"name": "right", "type": "f", "test": "tests/test_darktable.py::test_crop_edges_are_normalized"},
+      {"name": "bottom", "type": "f", "test": "tests/test_darktable.py::test_crop_edges_are_normalized"},
+      {"name": "ratio_n", "type": "i", "test": null},
+      {"name": "ratio_d", "type": "i", "test": null}
+    ]
+  },
+  "exposure": {
+    "version": 7, "size": 28,
+    "fields": [
+      {"name": "mode", "type": "i", "test": null},
+      {"name": "black", "type": "f", "test": "tests/test_darktable.py::test_exposure_field_order"},
+      {"name": "exposure", "type": "f", "test": "tests/test_darktable.py::test_exposure_field_order"},
+      {"name": "deflicker_percentile", "type": "f", "test": null},
+      {"name": "deflicker_target_level", "type": "f", "test": null},
+      {"name": "compensate_exposure_bias", "type": "i", "test": null},
+      {"name": "unknown", "type": "i", "test": null}
+    ]
+  },
+  "sigmoid": {
+    "version": 3, "size": 56,
+    "fields": [
+      {"name": "middle_grey_contrast", "type": "f", "test": null, "note": "checked by render in a session, no automated test yet"},
+      {"name": "contrast_skewness", "type": "f", "test": null, "note": "checked by render in a session, no automated test yet"}
+    ]
+  }
+}

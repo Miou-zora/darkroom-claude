@@ -63,7 +63,7 @@ def with_iop_order_list(x, iop_list):
     """A second instance of a module (multi_priority 1) is silently ignored unless the
     sidecar carries an explicit iop_order_list that contains it."""
     if "darktable:iop_order_list=" in x:
-        return re.sub(r'darktable:iop_order_list="[^"]*"', f'darktable:iop_order_list="{iop_list}"', x, 1)
+        return re.sub(r'darktable:iop_order_list="[^"]*"', f'darktable:iop_order_list="{iop_list}"', x, count=1)
     m = re.search(r'darktable:iop_order_version="\d+"', x)
     if not m:
         raise ValueError("no iop_order_version in sidecar")
