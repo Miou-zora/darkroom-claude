@@ -50,7 +50,7 @@ pixel by pixel afterwards.
 It refuses to run while darktable is open, backs the DB up, runs in one transaction, refuses
 rows where DB and sidecar already disagree unless told otherwise, and ends with
 `PRAGMA integrity_check`. The alternative is to reload each sidecar from the darktable GUI.
-A Lua-based path through darktable itself is being evaluated.
+A Lua-based path through darktable itself is being evaluated in [#2](https://github.com/Miou-zora/darkroom-claude/issues/2).
 
 ## Related projects
 
@@ -66,7 +66,7 @@ darktable as a set of remote calls. It can be used alongside an MCP server.
 
 ## Status
 
-Early. See the issues for the roadmap. Module parameter layouts known so far are in
+Early. See the [issues](https://github.com/Miou-zora/darkroom-claude/issues) for the roadmap. Module parameter layouts known so far are in
 [`docs/module-params.md`](docs/module-params.md); contributions of verified layouts are welcome.
 
 ## License

@@ -28,4 +28,4 @@ is `blend_cst` (4 seen on every entry). Other fields not mapped yet.
 ## Contributing a layout
 
 Open an issue or a PR with: module, version, blob size, the field you changed, the two values
-rendered and what the render did. See issue "module parameter table".
+rendered and what the render did. See [#1](https://github.com/Miou-zora/darkroom-claude/issues/1).
