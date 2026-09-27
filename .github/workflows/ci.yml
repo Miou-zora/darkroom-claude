@@ -53,7 +53,7 @@ jobs:
           path: kpi/
 
   darktable:
-    name: integration on darktable ${{ env.DARKTABLE_VERSION }}
+    name: integration on darktable
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
