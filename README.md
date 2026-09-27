@@ -64,6 +64,30 @@ A Lua-based path through darktable itself is being evaluated in [#2](https://git
 darkroom-claude focuses on the method (measure, render, verify) rather than on exposing
 darktable as a set of remote calls. It can be used alongside an MCP server.
 
+## CI and KPIs
+
+Every claim the skills make is a test. CI runs them on a real darktable 5.6.1 (AppImage) with
+a CC0 Sony A7 III sample from [raw.pixls.us](https://raw.pixls.us/), then computes KPIs and
+fails if one misses its threshold ([`ci/kpi-baseline.json`](ci/kpi-baseline.json), a ratchet:
+thresholds only go up). The table is printed in each run's summary.
+
+| KPI | Meaning | Threshold |
+|---|---|---|
+| `tests_pass_rate` | unit and integration tests passing | 100% |
+| `darktable_tests_run` | integration tests actually executed, not skipped | baseline |
+| `pitfalls_covered` | pitfalls of [`docs/pitfalls.md`](docs/pitfalls.md) reproduced by a passing test | baseline |
+| `param_fields_confirmed` | fields of [`tools/modules.json`](tools/modules.json) proven by a passing render test | baseline |
+| `always_on_tokens` | context the plugin adds to every session (`claude plugin details`) | at most 1000 |
+| `manifests_valid` | `claude plugin validate` on both manifests | pass |
+
+A KPI that could not be measured counts as failed. Run locally:
+
+```
+pip install -r tests/requirements.txt
+python -m pytest -m "not darktable"      # unit tests, no darktable needed
+python -m pytest -m darktable            # needs darktable-cli (or DARKTABLE_CLI)
+```
+
 ## Status
 
 Early. See the [issues](https://github.com/Miou-zora/darkroom-claude/issues) for the roadmap. Module parameter layouts known so far are in

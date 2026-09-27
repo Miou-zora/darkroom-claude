@@ -75,7 +75,9 @@ jobs:
             "https://github.com/darktable-org/darktable/releases/download/release-${DARKTABLE_VERSION}/Darktable-${DARKTABLE_VERSION}-x86_64.AppImage"
           [ -f ~/dt/sample.ARW ] || curl -fsSL -o ~/dt/sample.ARW \
             "https://raw.pixls.us/data/Sony/ILCE-7M3/_DSC0009.ARW"
-          sha256sum ~/dt/Darktable.AppImage ~/dt/sample.ARW
+          # pinned checksums: a changed binary or sample must fail, not run
+          echo "867ba61fca41d614e6650fd92d6e7968d8c56a1d1dd2bbc3aa06b52508694ed6  $HOME/dt/Darktable.AppImage
+          250784580ea527442c09004417bb0eead484f2bf3ee8f9121a776ac65bb50d0f  $HOME/dt/sample.ARW" | sha256sum -c -
       - name: extract AppImage (no FUSE on runners)
         run: |
           cd ~/dt && chmod +x Darktable.AppImage && ./Darktable.AppImage --appimage-extract > /dev/null
