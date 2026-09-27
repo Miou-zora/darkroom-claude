@@ -1,0 +1,17 @@
+{
+  "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
+  "name": "darkroom-claude",
+  "description": "Measured RAW development in darktable, driven by Claude Code.",
+  "owner": {
+    "name": "Miou-zora",
+    "url": "https://github.com/Miou-zora"
+  },
+  "plugins": [
+    {
+      "name": "darkroom-claude",
+      "description": "Diagnose, edit darktable XMP sidecars safely, frame for social media, export.",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+# darkroom-claude
+
+A Claude Code plugin for measured RAW development in [darktable](https://www.darktable.org/).
+Claude diagnoses your photos with numbers, edits the XMP sidecars safely, frames them so the
+subject reads on a phone, and exports them for publishing. Works with stock darktable, no
+patched build, no GUI automation.
+
+## Install
+
+```
+/plugin marketplace add Miou-zora/darkroom-claude
+/plugin install darkroom-claude@darkroom-claude
+```
+
+Requirements: darktable 5.x (tested on 5.6, macOS), Python 3 with `numpy` and `Pillow`.
+`darktable-cli` is found in the macOS app bundle or on `PATH`; set `DARKTABLE_CLI` otherwise.
+
+## What's inside
+
+| Kind | Name | What it does |
+|---|---|---|
+| Skill | `photo-diagnose` | Measure before editing: tonal range, clipping, color cast in linear light, where the eye goes, 100% crops. Corrections in scene-referred pipeline order. |
+| Skill | `darktable-xmp` | The rules for editing sidecars without silent failures, and for keeping `library.db` in sync. |
+| Skill | `frame-for-social` | Aspect limits, phone-size check (390 px), subject share of the frame, resolution budget, carousel order. |
+| Skill | `darktable-export` | Export through `darktable-cli`, sRGB, EXIF and GPS check, caption from real EXIF values. |
+| Command | `/dt-diagnose` | Diagnose one or more photos, change nothing. |
+| Command | `/dt-carousel` | Full pipeline for a social media carousel, with approval steps. |
+| Agent | `darkroom-reviewer` | Independent visual review of renders at full view, phone size and 100%. |
+| Hook | `guard_darktable_open` | Blocks writes to `.xmp` and `library.db` while darktable is running. |
+| Tool | `tools/xmp.py` | Decode and append history entries. |
+| Tool | `tools/render.py` | Render through `darktable-cli` in isolation and measure. |
+| Tool | `tools/dbsync.py` | Align `library.db` on edited sidecars, dry run by default. |
+
+## Why this exists
+
+Editing a darktable sidecar by hand fails silently in many ways, all hit in real sessions:
+
+- uppercase hex in `params`: the module is dropped, exit code 0;
+- a second module instance without `iop_order_list`: ignored, `params ok` in the log;
+- `darktable-cli` never overwrites its output: a tuning loop keeps measuring the old file;
+- darktable trusts `library.db` over the sidecar and rewrites the sidecar on open and close.
+
+The skills carry the method that catches these, and the tools make the safe path the easy one:
+every change is rendered and measured, every write is backed up, dry-run first and verified
+pixel by pixel afterwards.
+
+## Writing to library.db
+
+`tools/dbsync.py` writes to darktable's internal SQLite database, which is not a public API.
+It refuses to run while darktable is open, backs the DB up, runs in one transaction, refuses
+rows where DB and sidecar already disagree unless told otherwise, and ends with
+`PRAGMA integrity_check`. The alternative is to reload each sidecar from the darktable GUI.
+A Lua-based path through darktable itself is being evaluated.
+
+## Related projects
+
+- [w1ne/darktable-mcp](https://github.com/w1ne/darktable-mcp): MCP server, library and ratings
+  through darktable's Lua API; module editing needs a patched darktable.
+- [YaddyVirus/darktable-mcp](https://github.com/YaddyVirus/darktable-mcp): MCP server with simple
+  adjustments stored in its own sidecar.
+- [darkroom-xmp-tools](https://github.com/wmakeev/darkroom-xmp-tools): read and update module
+  params in darktable XMP files.
+
+darkroom-claude focuses on the method (measure, render, verify) rather than on exposing
+darktable as a set of remote calls. It can be used alongside an MCP server.
+
+## Status
+
+Early. See the issues for the roadmap. Module parameter layouts known so far are in
+[`docs/module-params.md`](docs/module-params.md); contributions of verified layouts are welcome.
+
+## License
+
+MIT

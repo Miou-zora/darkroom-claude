@@ -1,0 +1,27 @@
+{
+  "name": "darkroom-claude",
+  "version": "0.1.0",
+  "description": "Measured RAW development in darktable, driven by Claude Code: diagnose, edit XMP sidecars safely, frame for social media, export. Works with stock darktable.",
+  "author": {
+    "name": "Miou-zora",
+    "url": "https://github.com/Miou-zora"
+  },
+  "homepage": "https://github.com/Miou-zora/darkroom-claude",
+  "repository": "https://github.com/Miou-zora/darkroom-claude",
+  "license": "MIT",
+  "keywords": ["darktable", "photography", "raw", "xmp", "photo-editing", "instagram"],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash|Write|Edit|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 \"${CLAUDE_PLUGIN_ROOT}/hooks/guard_darktable_open.py\"",
+            "timeout": 5
+          }
+        ]
+      }
+    ]
+  }
+}
