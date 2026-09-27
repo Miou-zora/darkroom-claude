@@ -1,0 +1,126 @@
+name: ci
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+env:
+  DARKTABLE_VERSION: "5.6.1"
+  PYTHON_VERSION: "3.12"
+
+jobs:
+  unit:
+    name: unit tests (xmp, hook, dbsync)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r tests/requirements.txt
+      - name: pytest
+        env:
+          KPI_DIR: kpi
+          KPI_SUITE: unit
+        run: python -m pytest tests -m "not darktable" -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kpi-unit
+          path: kpi/
+
+  plugin:
+    name: plugin manifests and token cost
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install -g @anthropic-ai/claude-code
+      - name: validate manifests
+        run: |
+          mkdir -p kpi
+          { claude plugin validate . && claude plugin validate .claude-plugin/plugin.json; } 2>&1 | tee kpi/validate.txt
+      - name: component inventory and always-on token cost
+        run: claude --plugin-dir . plugin details darkroom-claude 2>&1 | tee kpi/plugin-details.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kpi-plugin
+          path: kpi/
+
+  darktable:
+    name: integration on darktable ${{ env.DARKTABLE_VERSION }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r tests/requirements.txt
+      - name: cache darktable AppImage and sample RAW
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/dt/Darktable.AppImage
+            ~/dt/sample.ARW
+          key: dt-${{ env.DARKTABLE_VERSION }}-sample-DSC0009
+      - name: fetch darktable and sample
+        run: |
+          mkdir -p ~/dt
+          [ -f ~/dt/Darktable.AppImage ] || curl -fsSL -o ~/dt/Darktable.AppImage \
+            "https://github.com/darktable-org/darktable/releases/download/release-${DARKTABLE_VERSION}/Darktable-${DARKTABLE_VERSION}-x86_64.AppImage"
+          [ -f ~/dt/sample.ARW ] || curl -fsSL -o ~/dt/sample.ARW \
+            "https://raw.pixls.us/data/Sony/ILCE-7M3/_DSC0009.ARW"
+          sha256sum ~/dt/Darktable.AppImage ~/dt/sample.ARW
+      - name: extract AppImage (no FUSE on runners)
+        run: |
+          cd ~/dt && chmod +x Darktable.AppImage && ./Darktable.AppImage --appimage-extract > /dev/null
+          ls squashfs-root squashfs-root/usr/bin | head -40
+      - name: darktable-cli wrapper
+        run: |
+          cat > ~/dt/darktable-cli <<'EOF'
+          #!/bin/bash
+          # Run darktable-cli from the extracted AppImage with its bundled libraries.
+          R="$HOME/dt/squashfs-root"
+          export LD_LIBRARY_PATH="$R/usr/lib:$R/usr/lib/x86_64-linux-gnu:${LD_LIBRARY_PATH:-}"
+          export XDG_DATA_DIRS="$R/usr/share:${XDG_DATA_DIRS:-/usr/share}"
+          exec "$R/usr/bin/darktable-cli" "$@"
+          EOF
+          chmod +x ~/dt/darktable-cli
+          ~/dt/darktable-cli --version || { ldd ~/dt/squashfs-root/usr/bin/darktable-cli | grep "not found"; exit 1; }
+      - name: pytest (darktable)
+        env:
+          KPI_DIR: kpi
+          KPI_SUITE: darktable
+          DARKTABLE_CLI: /home/runner/dt/darktable-cli
+          DARKROOM_SAMPLE: /home/runner/dt/sample.ARW
+        run: python -m pytest tests -m darktable -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kpi-darktable
+          path: kpi/
+
+  kpi:
+    name: KPIs
+    needs: [unit, plugin, darktable]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: kpi-*
+          path: artifacts
+          merge-multiple: true
+      - name: compute and enforce KPIs
+        run: python3 ci/kpi.py artifacts
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kpis
+          path: artifacts/kpis.json
