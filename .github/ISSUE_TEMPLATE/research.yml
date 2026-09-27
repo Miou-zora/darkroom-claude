@@ -1,0 +1,33 @@
+name: Research
+description: An open question to investigate before any implementation.
+title: "research: "
+labels: [research]
+body:
+  - type: textarea
+    id: question
+    attributes:
+      label: Question
+      description: One question, answerable by an experiment or a reading.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Context
+      description: Why it matters, what is known, links.
+    validations:
+      required: true
+  - type: textarea
+    id: plan
+    attributes:
+      label: How to investigate
+      description: The experiment or sources to check.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Expected outcome
+      description: The decision this research unlocks, and the follow-up issue it would open.
+    validations:
+      required: true

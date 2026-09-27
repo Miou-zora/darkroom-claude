@@ -1,0 +1,49 @@
+name: Bug report
+description: Something the plugin does wrong, or a skill gives advice that does not hold on your darktable.
+title: "fix: "
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title in Conventional Commits form, e.g. `fix(tools): dbsync misses versioned sidecars`.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [skill, command, agent, hook, tools, ci, docs]
+    validations:
+      required: true
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Exact output, error text or the render you got.
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      description: Minimal steps. Attach a sidecar if possible (strip personal metadata).
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidence
+      description: "`tools/render.py` JSON output, `darktable-cli -d params` excerpt, `tools/xmp.py check` output."
+      render: text
+  - type: input
+    id: darktable
+    attributes:
+      label: darktable version and OS
+      placeholder: "darktable 5.6.1, macOS 15"
+    validations:
+      required: true

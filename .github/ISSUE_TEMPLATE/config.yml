@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Known pitfalls
+    url: https://github.com/Miou-zora/darkroom-claude/blob/main/docs/pitfalls.md
+    about: Check whether your problem is a documented darktable pitfall first.

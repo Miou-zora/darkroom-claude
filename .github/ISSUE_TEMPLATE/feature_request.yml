@@ -1,0 +1,48 @@
+name: Feature request
+description: A new capability, tool, skill or test.
+title: "feat: "
+labels: [enhancement]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Title in Conventional Commits form, e.g. `feat(tools): apply a darktable style to sidecars`.
+        Use `test:` for test or eval work, `docs:` for documentation.
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [skill, command, agent, hook, tools, ci, docs]
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What fails or costs time today. Cite a real session, a pitfall (P1, P2...) or a measurement.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposal
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Verifiable checks, as a task list. Say which test proves each one.
+      value: |
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: kpi
+    attributes:
+      label: KPI impact
+      description: Which KPI of `ci/kpi-baseline.json` moves, and how (for example param_fields_confirmed +4).
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
