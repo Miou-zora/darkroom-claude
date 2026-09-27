@@ -4,6 +4,7 @@ on:
   push:
     branches: [main]
   pull_request:
+    types: [opened, edited, synchronize, reopened]
   workflow_dispatch:
 
 env:
@@ -11,6 +12,20 @@ env:
   PYTHON_VERSION: "3.12"
 
 jobs:
+  pr-title:
+    name: PR title follows Conventional Commits
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: check title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          # squash merge: the PR title becomes the commit on main (see CONTRIBUTING.md)
+          re='^(feat|fix|docs|test|ci|refactor|perf|chore|build|style|revert)(\([a-z0-9-]+\))?!?: [^ ].*[^.]$'
+          if printf '%s' "$TITLE" | grep -Eq "$re"; then echo "ok: $TITLE"
+          else echo "::error::PR title is not Conventional Commits: '$TITLE' (expected 'type(scope): summary', no trailing period)"; exit 1; fi
+
   unit:
     name: unit tests (xmp, hook, dbsync)
     runs-on: ubuntu-latest

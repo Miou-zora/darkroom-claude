@@ -92,6 +92,7 @@ python -m pytest -m darktable            # needs darktable-cli (or DARKTABLE_CLI
 
 Early. See the [issues](https://github.com/Miou-zora/darkroom-claude/issues) for the roadmap. Module parameter layouts known so far are in
 [`docs/module-params.md`](docs/module-params.md); contributions of verified layouts are welcome.
+See [`CONTRIBUTING.md`](CONTRIBUTING.md): Conventional Commits, squash merge, what "verified" means here.
 
 ## License
 
