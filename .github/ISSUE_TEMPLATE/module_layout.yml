@@ -1,0 +1,43 @@
+name: Module parameter layout
+description: Contribute a verified field of a darktable module's params struct.
+title: "docs(modules): "
+labels: [documentation]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A field is confirmed only when changing it moves the render the expected way.
+        See `docs/module-params.md` and `tools/modules.json`.
+  - type: input
+    id: module
+    attributes:
+      label: Module and version
+      placeholder: "colorbalancergb v5"
+    validations:
+      required: true
+  - type: input
+    id: size
+    attributes:
+      label: Blob size in bytes
+    validations:
+      required: true
+  - type: textarea
+    id: field
+    attributes:
+      label: Field
+      description: Offset, type, name, and the source you took the name from.
+    validations:
+      required: true
+  - type: textarea
+    id: proof
+    attributes:
+      label: Render proof
+      description: The two values rendered and what the render did (numbers from `tools/render.py`).
+    validations:
+      required: true
+  - type: input
+    id: darktable
+    attributes:
+      label: darktable version
+    validations:
+      required: true
