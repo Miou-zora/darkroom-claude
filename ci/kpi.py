@@ -53,6 +53,11 @@ def compute(d):
     k["tests_failed"] = len(failed)
     k["tests_pass_rate"] = round(len(passed) / len(tests), 4) if tests else None
     k["darktable_tests_run"] = sum(1 for t in dt if t["outcome"] != "skipped")
+    k["darktable_tests_run_by_os"] = {}  # informational; the ratchet applies to the total
+    for t in dt:
+        if t["outcome"] != "skipped":
+            os_ = t.get("platform", "unknown")
+            k["darktable_tests_run_by_os"][os_] = k["darktable_tests_run_by_os"].get(os_, 0) + 1
     ids = pitfall_ids()
     covered = sorted({p for t in tests if t["outcome"] == "passed" for p in t["pitfalls"]} & set(ids))
     k["pitfalls_documented"] = len(ids)
@@ -117,7 +122,8 @@ def main():
     md += [f"| {n} | {v} | {t} | {r} |" for n, v, t, r in rows]
     if not only:
         md += ["", f"Pitfalls without a passing test: {', '.join(k['pitfalls_uncovered']) or 'none'}",
-               f"Parameter fields confirmed: {k['param_fields_confirmed']} / {k['param_fields_known']}"]
+               f"Parameter fields confirmed: {k['param_fields_confirmed']} / {k['param_fields_known']}",
+               f"darktable tests run per OS: {k['darktable_tests_run_by_os'] or 'none'}"]
     if k["_failed_tests"] and not only:
         md += ["", "Failed tests:"] + [f"- `{t}`" for t in k["_failed_tests"]]
     text = "\n".join(md) + "\n"
