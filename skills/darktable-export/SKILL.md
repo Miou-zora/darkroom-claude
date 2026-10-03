@@ -10,7 +10,7 @@ description: >
 
 ## Before exporting
 
-- The sidecars must be final: `tools/dbsync.py` dry run reports everything aligned, and the
+- The sidecars must be final: `tools/reload.py` succeeded (or a `tools/dbsync.py` dry run reports everything aligned), and the
   last renders were validated by the user.
 - Pick an output folder that does not exist yet, or delete only the files you will replace,
   by name. darktable-cli never overwrites: it writes `name_01.jpg` beside the old file.

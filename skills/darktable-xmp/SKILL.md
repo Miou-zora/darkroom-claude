@@ -11,7 +11,7 @@ description: >
 # Editing darktable sidecars
 
 Tools live in `tools/` at the plugin root (two levels above this skill's base directory):
-`xmp.py` (read, append, `get_field`/`set_field`/`default_params` by field name for modules in `modules.json`), `render.py` (render and measure), `dbsync.py` (align library.db).
+`xmp.py` (read, append, `get_field`/`set_field`/`default_params` by field name for modules in `modules.json`), `render.py` (render and measure), `reload.py` (make darktable take an edited sidecar), `dbsync.py` (fallback, writes library.db).
 
 ## Before writing anything
 
@@ -70,12 +70,19 @@ For an image already in the library, darktable trusts `library.db` over the side
 rewrites the sidecar from the DB on open and close. An edited sidecar is lost unless:
 
 - the user reloads it from the GUI (lighttable, "load sidecar file"), or
-- `dbsync.py` aligns the DB, darktable closed: dry run first, read the report, then `--write`.
-  Divergent rows (DB and sidecar already disagreeing before your edit) are refused unless
-  `--accept-divergent`: show them to the user, they may be an older edit that never reached
-  the DB.
+- `python3 tools/reload.py SIDECAR.xmp [...]` (default), darktable closed. It runs the sidecar
+  through darktable's own Lua API (`image:apply_sidecar`) in a headless `darktable-cli`, so
+  darktable writes the DB and no schema is involved. It backs `library.db` up, then fails unless
+  every sidecar printed `RELOAD ok` and a dry-run `dbsync.plan()` finds the DB equal to the
+  sidecar. The image must already be in the library. It needs Lua API 9.5.0 or newer; only
+  darktable 5.6.0 (API 9.7.0) was tested. Never trust a bare exit code from `darktable-cli --luacmd`.
+- `dbsync.py` is the fallback for a darktable without that API or without Lua, and the way to
+  get a dry-run report: dry run first, read the report, then `--write`. Divergent rows (DB and
+  sidecar already disagreeing before your edit) are refused unless `--accept-divergent`: show
+  them to the user, they may be an older edit that never reached the DB.
 
-`library.db` is not a public API. Prefer the GUI reload when there are few images.
+`library.db` is not a public API, which is why `reload.py` is the default. With few images the
+GUI reload (lighttable, "load sidecar file") also works.
 
-After writing: dry run again (everything aligned), render from the real files and compare to
+After writing: `dbsync.py` dry run again (everything aligned; `reload.py` already does it), render from the real files and compare to
 the validated renders pixel by pixel.
