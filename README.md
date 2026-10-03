@@ -13,7 +13,8 @@ patched build, no GUI automation.
 ```
 
 Requirements: darktable 5.x (tested on 5.6, macOS), Python 3 with `numpy` and `Pillow`.
-`darktable-cli` is found in the macOS app bundle or on `PATH`; set `DARKTABLE_CLI` otherwise.
+`darktable-cli` is found in the macOS app bundle, in `%ProgramFiles%\darktable\bin` on Windows, or on `PATH`; set `DARKTABLE_CLI` otherwise.
+Windows support is new (see issue #9): unit tests run on `windows-latest` in CI; use `python` where the docs say `python3` if your install has no `python3` alias.
 
 ## What's inside
 

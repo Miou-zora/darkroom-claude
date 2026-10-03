@@ -26,7 +26,8 @@ def pytest_runtest_makereport(item, call):
     if rep.when == "call" or (rep.when == "setup" and rep.outcome != "passed"):
         _results.append(dict(test=item.nodeid, outcome="skipped" if rep.skipped else rep.outcome,
                              pitfalls=[m.args[0] for m in item.iter_markers("pitfall")],
-                             darktable=item.get_closest_marker("darktable") is not None))
+                             darktable=item.get_closest_marker("darktable") is not None,
+                             platform=sys.platform))
 
 
 def pytest_sessionfinish(session):
@@ -39,7 +40,7 @@ def pytest_sessionfinish(session):
 
 @pytest.fixture(scope="session")
 def minimal_xmp():
-    return open(os.path.join(ROOT, "tests", "fixtures", "minimal.xmp")).read()
+    return open(os.path.join(ROOT, "tests", "fixtures", "minimal.xmp"), encoding="utf-8").read()
 
 
 @pytest.fixture(scope="session")

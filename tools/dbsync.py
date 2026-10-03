@@ -14,20 +14,22 @@ This writes to darktable's internal database, whose schema is not a public API.
 Every --write backs the DB up first, runs in one transaction and ends with
 PRAGMA integrity_check. Tested against darktable 5.6.
 """
-import os, re, sys, time, shutil, sqlite3, subprocess, argparse
+import ntpath, os, re, sys, time, shutil, sqlite3, argparse
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 from xmp import entries, history_end, decode_blob
+from dtenv import config_dir, darktable_running
 
 GDATETIME_EPOCH_OFFSET = 62135596800  # images.change_timestamp: microseconds since year 1
 
 
 def library_path():
-    base = os.environ.get("DARKTABLE_CONFIGDIR", os.path.expanduser("~/.config/darktable"))
-    return os.path.join(base, "library.db")
+    return os.path.join(config_dir(), "library.db")
 
 
-def darktable_running():
-    return subprocess.run(["pgrep", "-x", "darktable"], capture_output=True).returncode == 0
+def folder_key(p):
+    """film_rolls.folder vs the sidecar's folder. On Windows the DB may hold either slash
+    and any drive letter case; elsewhere paths are compared as stored."""
+    return ntpath.normcase(ntpath.normpath(p)) if sys.platform == "win32" else p
 
 
 def locate(db, sidecar):
@@ -39,10 +41,10 @@ def locate(db, sidecar):
     version = 0
     if m and not os.path.exists(os.path.join(folder, raw)):
         raw, version = m.group(1) + m.group(3), int(m.group(2))
-    row = db.execute("select i.id from images i join film_rolls f on f.id = i.film_id "
-                     "where f.folder = ? and i.filename = ? and i.version = ?",
-                     (folder, raw, version)).fetchone()
-    return (row[0] if row else None), raw, version
+    rows = db.execute("select i.id, f.folder from images i join film_rolls f on f.id = i.film_id "
+                      "where i.filename = ? and i.version = ?", (raw, version)).fetchall()
+    hit = next((r[0] for r in rows if folder_key(r[1]) == folder_key(folder)), None)
+    return hit, raw, version
 
 
 def row(e):
@@ -59,7 +61,7 @@ def plan(db, sidecar):
     iid, raw, version = locate(db, sidecar)
     if iid is None:
         return dict(sidecar=sidecar, error=f"{raw} (version {version}) not found in library.db")
-    x = open(sidecar).read()
+    x = open(sidecar, encoding="utf-8").read()
     ents = [row(e) for e in entries(x)]
     have = db.execute(f"select {COLS} from history where imgid = ? order by num", (iid,)).fetchall()
     diverge = [h[0] for h, e in zip(have, ents) if tuple(h) != e]

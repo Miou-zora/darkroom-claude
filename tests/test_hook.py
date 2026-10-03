@@ -99,3 +99,15 @@ def test_allows_reads_while_darktable_runs(monkeypatch):
 
 def test_ignores_malformed_payload(monkeypatch):
     assert run(monkeypatch, "not json", True) == 0
+
+
+def test_blocks_windows_sidecar_write_while_darktable_exe_runs(monkeypatch, capsys):
+    """End to end on the Windows path: backslash path, real tasklist parsing, mocked process list."""
+    import subprocess
+    monkeypatch.setattr(sys, "platform", "win32")
+    out = "\"darktable.exe\",\"4242\",\"Console\",\"1\",\"310,000 K\"\r\n"
+    monkeypatch.setattr(subprocess, "run", lambda cmd, **kw: type("R", (), {"returncode": 0, "stdout": out})())
+    p = json.dumps({"tool_name": "Write", "tool_input": {"file_path": "C:\\Users\\a\\Pictures\\DSC1.ARW.xmp"}})
+    monkeypatch.setattr(sys, "stdin", io.StringIO(p))
+    assert g.main() == 2
+    assert "darktable is running" in capsys.readouterr().err

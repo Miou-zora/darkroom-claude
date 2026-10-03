@@ -16,11 +16,11 @@ import os, re, sys, json, shutil, subprocess, argparse
 import numpy as np
 from PIL import Image
 
-CANDIDATES = [os.environ.get("DARKTABLE_CLI", ""),
-              "/Applications/darktable.app/Contents/MacOS/darktable-cli",
-              shutil.which("darktable-cli") or ""]
-CONF = os.path.join(os.path.expanduser(os.environ.get("XDG_CACHE_HOME", "~/.cache")),
-                    "darkroom-claude", "dtconf")
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+import dtenv
+
+CANDIDATES = dtenv.cli_candidates()
+CONF = os.path.join(dtenv.cache_dir(), "darkroom-claude", "dtconf")
 
 
 def cli():
@@ -44,7 +44,7 @@ def render(raw, xmp, out, size=1080, height=None):
         cmd += ["--width", str(size), "--height", str(height or size)]
     cmd += ["--core", "--configdir", CONF, "--library", ":memory:",
             "--conf", "write_sidecar_files=never", "-d", "params"]
-    r = subprocess.run(cmd, capture_output=True, text=True)
+    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     loaded, wrong = parse_params_log(r.stdout + r.stderr)
     return dict(exit=r.returncode, modules_loaded=loaded, params_wrong=wrong,
                 written=os.path.exists(out))

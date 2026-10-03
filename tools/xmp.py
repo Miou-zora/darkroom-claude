@@ -155,7 +155,7 @@ def _floats(b):
 def main(argv):
     if len(argv) != 3 or argv[1] not in ("show", "check"):
         print("usage: xmp.py show|check SIDECAR.xmp"); return 2
-    x = open(argv[2]).read()
+    x = open(argv[2], encoding="utf-8").read()
     ents, end = entries(x), history_end(x)
     if argv[1] == "check":
         lst = re.search(r'darktable:iop_order_list="([^"]*)"', x)
