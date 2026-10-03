@@ -27,7 +27,7 @@ jobs:
           else echo "::error::PR title is not Conventional Commits: '$TITLE' (expected 'type(scope): summary', no trailing period)"; exit 1; fi
 
   unit:
-    name: unit tests (xmp, hook, dbsync, reload)
+    name: unit tests (xmp, hook, dbsync)
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
