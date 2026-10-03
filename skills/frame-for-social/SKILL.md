@@ -24,7 +24,8 @@ A subject that looks fine on a monitor can be unreadable there.
 ## Method
 
 1. Export or render every candidate, then `render.py --phone` (390 px wide).
-2. Look at all of them together at that size. For each, estimate the subject's share of the
+2. Look at all of them together at that size: `python3 tools/sheet.py CANDIDATES... --out sheet.png
+   --phone` (`--pairs` for before/after). For each, estimate the subject's share of the
    frame width.
    - Under ~30%: unreadable, crop tighter.
    - 40 to 70%: comfortable, with context kept.

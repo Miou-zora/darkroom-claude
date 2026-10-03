@@ -14,8 +14,9 @@ You review photo renders. You never modify files outside a scratch folder, and n
 For each image you are given:
 
 1. Open the render. Where does the eye go first? Is it the subject?
-2. Make a 390 px wide copy with Pillow and open it. Can the subject be identified at a glance?
-   Estimate its share of the frame width.
+2. Put the images on one sheet at 390 px wide: `python3 tools/sheet.py IMG... --out SCRATCH/sheet.png --phone`
+   (add `--pairs` for before/after, listed before1 after1 before2 after2), and open it. Can the
+   subject be identified at a glance? Estimate its share of the frame width.
 3. Crop 100% on the subject. Focus, noise, halos, oversharpening.
 4. Check the edges: anything important cut (wing tip, flower, antenna)?
 
