@@ -65,6 +65,26 @@ A Lua-based path through darktable itself is being evaluated in [#2](https://git
 darkroom-claude focuses on the method (measure, render, verify) rather than on exposing
 darktable as a set of remote calls. It can be used alongside an MCP server.
 
+## Combining with darktable-mcp
+
+[w1ne/darktable-mcp](https://github.com/w1ne/darktable-mcp) (MIT) covers what this plugin does
+not: ratings, tags, notes, collections, styles and batch export, through the running darktable
+GUI. Those library tools were checked on stock darktable 5.6.0; its module editing tools need a
+patched darktable and are not used here. Details in
+[`docs/research/darktable-mcp.md`](docs/research/darktable-mcp.md).
+
+The two have opposite rules about the GUI, so alternate rather than run together:
+
+1. GUI open: rate, tag, pick the photos with darktable-mcp.
+2. Close darktable. Diagnose, edit sidecars, render and verify with darkroom-claude.
+3. Reload the edited sidecars into the library (`tools/dbsync.py`; a Lua route is evaluated in
+   [#2](https://github.com/Miou-zora/darkroom-claude/issues/2)), then reopen darktable.
+
+Notes: on macOS `darktable-cli` must be on `PATH` for its `export_images`, and its
+`export_images` takes file paths in `photo_ids`. Its `apply_ratings_batch` writes `.xmp` files
+through an MCP tool, which the `guard_darktable_open` hook cannot see. darktable itself now
+ships a `darktable-mcp` in development builds (not in 5.6.x), not evaluated yet.
+
 ## CI and KPIs
 
 Every claim the skills make is a test. CI runs them on a real darktable 5.6.1 (AppImage) with
