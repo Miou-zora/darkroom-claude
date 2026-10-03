@@ -1,5 +1,5 @@
 {
-  "_doc": "Parameter layouts, darktable 5.6, little-endian. A field counts as confirmed in the CI KPIs only if `test` names an integration test that passes in the same run. Human-checked fields without a test keep `test: null`.",
+  "_doc": "Parameter layouts, darktable 5.6, little-endian, every field 4 bytes (f float, i int or enum). A field counts as confirmed in the CI KPIs only if `test` names an integration test that passes in the same run. Human-checked fields without a test keep `test: null`. `default` is the value darktable gives a new instance (from dt_iop_*_params_t in src/iop/*.c); it is what xmp.default_params() writes.",
   "crop": {
     "version": 3, "size": 24,
     "fields": [
@@ -26,8 +26,58 @@
   "sigmoid": {
     "version": 3, "size": 56,
     "fields": [
-      {"name": "middle_grey_contrast", "type": "f", "test": null, "note": "checked by render in a session, no automated test yet"},
-      {"name": "contrast_skewness", "type": "f", "test": null, "note": "checked by render in a session, no automated test yet"}
+      {"name": "middle_grey_contrast", "type": "f", "default": 1.5, "test": "tests/test_darktable.py::test_sigmoid_contrast"},
+      {"name": "contrast_skewness", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_sigmoid_skew"},
+      {"name": "display_white_target", "type": "f", "default": 100.0, "test": null},
+      {"name": "display_black_target", "type": "f", "default": 0.0152, "test": null},
+      {"name": "color_processing", "type": "i", "default": 0, "test": null, "note": "0 per channel, 1 RGB ratio"},
+      {"name": "hue_preservation", "type": "f", "default": 100.0, "test": null},
+      {"name": "red_inset", "type": "f", "default": 0.0, "test": null},
+      {"name": "red_rotation", "type": "f", "default": 0.0, "test": null},
+      {"name": "green_inset", "type": "f", "default": 0.0, "test": null},
+      {"name": "green_rotation", "type": "f", "default": 0.0, "test": null},
+      {"name": "blue_inset", "type": "f", "default": 0.0, "test": null},
+      {"name": "blue_rotation", "type": "f", "default": 0.0, "test": null},
+      {"name": "purity", "type": "f", "default": 0.0, "test": null},
+      {"name": "base_primaries", "type": "i", "default": 0, "test": null, "note": "0 work profile, 1 Rec2020, 2 Display P3, 3 Adobe RGB, 4 sRGB"}
+    ]
+  },
+  "colorbalancergb": {
+    "version": 5, "size": 132,
+    "fields": [
+      {"name": "shadows_Y", "type": "f", "default": 0.0, "test": null},
+      {"name": "shadows_C", "type": "f", "default": 0.0, "test": null},
+      {"name": "shadows_H", "type": "f", "default": 0.0, "test": null},
+      {"name": "midtones_Y", "type": "f", "default": 0.0, "test": null},
+      {"name": "midtones_C", "type": "f", "default": 0.0, "test": null},
+      {"name": "midtones_H", "type": "f", "default": 0.0, "test": null},
+      {"name": "highlights_Y", "type": "f", "default": 0.0, "test": null},
+      {"name": "highlights_C", "type": "f", "default": 0.0, "test": null},
+      {"name": "highlights_H", "type": "f", "default": 0.0, "test": null},
+      {"name": "global_Y", "type": "f", "default": 0.0, "test": null},
+      {"name": "global_C", "type": "f", "default": 0.0, "test": null},
+      {"name": "global_H", "type": "f", "default": 0.0, "test": null},
+      {"name": "shadows_weight", "type": "f", "default": 1.0, "test": null},
+      {"name": "white_fulcrum", "type": "f", "default": 0.0, "test": null},
+      {"name": "highlights_weight", "type": "f", "default": 1.0, "test": null},
+      {"name": "chroma_shadows", "type": "f", "default": 0.0, "test": null},
+      {"name": "chroma_highlights", "type": "f", "default": 0.0, "test": null},
+      {"name": "chroma_global", "type": "f", "default": 0.0, "test": null},
+      {"name": "chroma_midtones", "type": "f", "default": 0.0, "test": null},
+      {"name": "saturation_global", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_colorbalancergb_saturation_global"},
+      {"name": "saturation_highlights", "type": "f", "default": 0.0, "test": null},
+      {"name": "saturation_midtones", "type": "f", "default": 0.0, "test": null},
+      {"name": "saturation_shadows", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_angle", "type": "f", "default": 0.0, "test": null},
+      {"name": "brilliance_global", "type": "f", "default": 0.0, "test": null},
+      {"name": "brilliance_highlights", "type": "f", "default": 0.0, "test": null},
+      {"name": "brilliance_midtones", "type": "f", "default": 0.0, "test": null},
+      {"name": "brilliance_shadows", "type": "f", "default": 0.0, "test": null},
+      {"name": "mask_grey_fulcrum", "type": "f", "default": 0.1845, "test": null},
+      {"name": "vibrance", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_colorbalancergb_vibrance"},
+      {"name": "grey_fulcrum", "type": "f", "default": 0.1845, "test": null},
+      {"name": "contrast", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_colorbalancergb_contrast"},
+      {"name": "saturation_formula", "type": "i", "default": 1, "test": null, "note": "0 JzAzBz, 1 DT UCS"}
     ]
   }
 }

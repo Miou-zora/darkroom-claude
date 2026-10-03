@@ -11,7 +11,7 @@ description: >
 # Editing darktable sidecars
 
 Tools live in `tools/` at the plugin root (two levels above this skill's base directory):
-`xmp.py` (read, append), `render.py` (render and measure), `dbsync.py` (align library.db).
+`xmp.py` (read, append, `get_field`/`set_field`/`default_params` by field name for modules in `modules.json`), `render.py` (render and measure), `dbsync.py` (align library.db).
 
 ## Before writing anything
 

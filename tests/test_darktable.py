@@ -120,3 +120,57 @@ def test_cli_never_overwrites(tmp_path, sample_raw, darktable_cli, base):
     # render.py removes the stale file first, so it never produces a suffixed copy
     render.render(sample_raw, str(side), str(out), 200)
     assert not (tmp_path / "out_02.jpg").exists()
+
+
+# Field confirmation (tools/modules.json): change one field of a default instance, check the
+# render moves the expected way. The module must load, or darktable dropped the blob.
+
+def chroma(a):
+    return float((a.max(2) - a.min(2)).mean())
+
+
+def luma_spread(a):
+    return float((0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2]).std())
+
+
+def with_module(base, module, version, **fields):
+    blob = xmp.default_params(module, version)
+    for name, value in fields.items():
+        blob = xmp.set_field(blob, module, version, name, value)
+    return xmp.append(base, module, version, blob)
+
+
+def render_module(rend, base, module, version, **fields):
+    res, a = rend(with_module(base, module, version, **fields))
+    assert res["params_wrong"] == [] and module in res["modules_loaded"], res
+    return a
+
+
+def test_colorbalancergb_saturation_global(rend, base):
+    lo, mid, hi = (chroma(render_module(rend, base, "colorbalancergb", 5, saturation_global=v))
+                   for v in (-0.5, 0.0, 0.5))
+    assert lo < mid * 0.9 and hi > mid * 1.05
+
+
+def test_colorbalancergb_vibrance(rend, base):
+    mid = chroma(render_module(rend, base, "colorbalancergb", 5, vibrance=0.0))
+    hi = chroma(render_module(rend, base, "colorbalancergb", 5, vibrance=0.8))
+    assert hi > mid * 1.03
+
+
+def test_colorbalancergb_contrast(rend, base):
+    lo, mid, hi = (luma_spread(render_module(rend, base, "colorbalancergb", 5, contrast=v))
+                   for v in (-0.5, 0.0, 0.5))
+    assert lo < mid * 0.95 and hi > mid * 1.05
+
+
+def test_sigmoid_contrast(rend, base):
+    lo, hi = (luma_spread(render_module(rend, base, "sigmoid", 3, middle_grey_contrast=v))
+              for v in (1.0, 2.5))
+    assert hi > lo * 1.05
+
+
+def test_sigmoid_skew(rend, base):
+    neg, mid, pos = (luma(render_module(rend, base, "sigmoid", 3, contrast_skewness=v))
+                     for v in (-0.5, 0.0, 0.5))
+    assert neg < mid * 0.99 and pos > mid * 1.01

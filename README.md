@@ -27,7 +27,7 @@ Requirements: darktable 5.x (tested on 5.6, macOS), Python 3 with `numpy` and `P
 | Command | `/dt-carousel` | Full pipeline for a social media carousel, with approval steps. |
 | Agent | `darkroom-reviewer` | Independent visual review of renders at full view, phone size and 100%. |
 | Hook | `guard_darktable_open` | Blocks writes to `.xmp` and `library.db` while darktable is running. |
-| Tool | `tools/xmp.py` | Decode and append history entries. |
+| Tool | `tools/xmp.py` | Decode and append history entries, read and write module params by field name. |
 | Tool | `tools/render.py` | Render through `darktable-cli` in isolation and measure. |
 | Tool | `tools/dbsync.py` | Align `library.db` on edited sidecars, dry run by default. |
 

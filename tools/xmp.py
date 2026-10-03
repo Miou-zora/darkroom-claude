@@ -5,12 +5,15 @@
     python3 xmp.py check photo.ARW.xmp         history_end vs entry count, iop_order_list
 
 As a module: entries(), history_end(), append(), decode_blob(), crop_params(),
-exposure_params(), with_iop_order_list().
+exposure_params(), with_iop_order_list(), and by-name access to any module listed in
+modules.json: get_field(), set_field(), default_params().
 
 Existing entries are never modified: darktable keeps the last entry of each
 (operation, multi_priority) pair, so a change is always a new entry.
 """
-import re, struct, base64, zlib, sys
+import re, struct, base64, zlib, sys, json, os
+
+LAYOUTS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "modules.json")))
 
 # Neutral blend parameters (blendop_version 14), taken from a crop entry written by darktable 5.6.
 NEUTRAL_BLEND = "gz11eJxjYIAACQYYOOHEgAZY0QWAgBGLGANDgz0Ej1Q+dcF/IADRAGpyHQU="
@@ -79,6 +82,51 @@ def exposure_params(ev, black=-0.000244140625):
     """exposure v7: int mode, float black, float exposure, float deflicker percentile,
     float deflicker target, int compensate camera bias, int (unused here)."""
     return struct.pack("<i4fii", 0, black, ev, 50.0, -4.0, 1, 1)
+
+
+def _layout(module, version):
+    """Field table of tools/modules.json. Refuses a version it does not describe: blobs are
+    version-specific, and reading a v6 blob with a v5 table gives plausible wrong numbers."""
+    m = LAYOUTS.get(module)
+    if not m or module.startswith("_") or m["version"] != version:
+        known = f"v{m['version']}" if m and not module.startswith("_") else "none"
+        raise ValueError(f"no layout for {module} v{version} (known: {known})")
+    return m
+
+
+def _field(blob, module, version, name):
+    m = _layout(module, version)
+    if len(blob) != m["size"]:
+        raise ValueError(f"{module} v{version} blob is {len(blob)} bytes, layout says {m['size']}")
+    names = [f["name"] for f in m["fields"]]
+    if name not in names:
+        raise ValueError(f"{module} v{version} has no field {name!r}")
+    i = names.index(name)
+    return i, m["fields"][i]["type"]
+
+
+def get_field(blob, module, version, name):
+    i, t = _field(blob, module, version, name)
+    return struct.unpack_from("<" + t, blob, 4 * i)[0]
+
+
+def set_field(blob, module, version, name, value):
+    """Return `blob` with one field replaced. Ints stay ints: a float written in an enum slot
+    would be accepted silently."""
+    i, t = _field(blob, module, version, name)
+    if t == "i" and value != int(value):
+        raise ValueError(f"{module}.{name} is an int field, got {value!r}")
+    return blob[:4 * i] + struct.pack("<" + t, int(value) if t == "i" else value) + blob[4 * i + 4:]
+
+
+def default_params(module, version):
+    """A new instance as darktable would create it, from the `default` values of modules.json."""
+    m = _layout(module, version)
+    missing = [f["name"] for f in m["fields"] if "default" not in f]
+    if missing:
+        raise ValueError(f"{module} v{version}: no default for {missing}")
+    return struct.pack("<" + "".join(f["type"] for f in m["fields"]),
+                       *[f["default"] for f in m["fields"]])
 
 
 def _floats(b):
