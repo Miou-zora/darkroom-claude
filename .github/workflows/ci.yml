@@ -187,11 +187,13 @@ jobs:
           Get-ChildItem $cli
           & C:\darktable\bin\darktable-cli.exe --version
       - name: diagnostics (throwaway, #31)
+        timeout-minutes: 8
         env:
           DARKROOM_SAMPLE: C:\dt\sample.ARW
           DARKTABLE_CLI: C:\darktable\bin\darktable-cli.exe
         run: python ci/diag_win.py
       - name: pytest (darktable)
+        timeout-minutes: 15
         env:
           KPI_DIR: kpi
           KPI_SUITE: darktable-windows

@@ -13,15 +13,25 @@ print("work     :", work, "cwd:", os.getcwd())
 start = time.time()
 
 
-def run(label, out, extra):
+def run(label, out, extra, timeout=60):
     if os.path.exists(out): os.remove(out)
     cmd = [render.cli(), raw, side, out, "--hq", "true", "--upscale", "false", "--apply-custom-presets", "false",
            "--width", "400", "--height", "400"] + extra
     print(f"\n=== {label}\nCMD: {cmd}", flush=True)
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    print("exit:", r.returncode)
-    print("STDOUT tail:", "\n".join(r.stdout.splitlines()[-25:]))
-    print("STDERR tail:", "\n".join(r.stderr.splitlines()[-25:]))
+    so, se = os.path.join(work, label[0] + ".out"), os.path.join(work, label[0] + ".err")
+    with open(so, "wb") as fo, open(se, "wb") as fe:
+        p = subprocess.Popen(cmd, stdin=subprocess.DEVNULL, stdout=fo, stderr=fe)
+        try:
+            rc = p.wait(timeout=timeout)
+        except subprocess.TimeoutExpired:
+            rc = "TIMEOUT"
+            print("tasklist during hang:", subprocess.run(["tasklist"], capture_output=True, text=True).stdout[-1500:])
+            print("exists(out) during hang:", os.path.exists(out), "| listdir:", sorted(os.listdir(os.path.dirname(out) or ".")))
+            subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], capture_output=True)
+    print("exit:", rc)
+    for f in (so, se):
+        t = open(f, encoding="utf-8", errors="replace").read().splitlines()
+        print(f"{os.path.basename(f)} ({len(t)} lines) tail:", "\n".join(t[-25:]))
     print("exists(out):", os.path.exists(out), "| listdir:", sorted(os.listdir(os.path.dirname(out) or ".")), flush=True)
 
 
