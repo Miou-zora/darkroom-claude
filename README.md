@@ -80,8 +80,12 @@ thresholds only go up). The table is printed in each run's summary.
 | `param_fields_confirmed` | fields of [`tools/modules.json`](tools/modules.json) proven by a passing render test | baseline |
 | `always_on_tokens` | context the plugin adds to every session (`claude plugin details`) | at most 1000 |
 | `manifests_valid` | `claude plugin validate` on both manifests | pass |
+| `evals_pass_rate` | share of [`evals/`](evals/) cases passing (`claude plugin eval`, manual workflow) | baseline, skipped when no eval ran |
 
-A KPI that could not be measured counts as failed. Run locally:
+A KPI that could not be measured counts as failed, except `evals_pass_rate`: evals call the model
+and cost API money, so they run only from the `evals` workflow (`workflow_dispatch`, needs the
+`ANTHROPIC_API_KEY` secret). A normal PR run shows it as `skip`; the evals workflow requires it.
+Run locally:
 
 ```
 pip install -r tests/requirements.txt

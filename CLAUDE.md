@@ -87,6 +87,12 @@ never lowers). A KPI that can't be measured counts as failed. When adding a test
 pitfall or confirms a param field, add the marker / wire `tools/modules.json`'s `test` field, or
 the KPI table won't reflect it.
 
+`evals/` (`claude plugin eval` cases) is the exception: it calls the model, so it runs only from
+`.github/workflows/evals.yml` (`workflow_dispatch`, `ANTHROPIC_API_KEY`). `tests/test_evals.py`
+checks its structure for free. `evals_pass_rate` is the one KPI that is `skip` instead of failed
+when it was not measured (no `evals-result.json`); the evals workflow runs `ci/kpi.py ... --only
+evals_pass_rate`, where absence fails.
+
 ## Working with real photo folders (no git there)
 
 There's no version control on the user's photo library, so:
