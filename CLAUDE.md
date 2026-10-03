@@ -41,7 +41,11 @@ call, in what order, and what pitfall to check for.
   with an in-memory library (never touches the user's real `library.db`), then measures the
   output (luminance percentiles, clipped %). Parses `-d params` output to catch modules whose
   params blob failed to decode (`params_wrong`).
-- `tools/dbsync.py`: the only thing here that writes to `library.db` (not a public API). Dry run
+- `tools/reload.py` (+ `tools/reload_sidecars.lua`): the default way to make darktable take an edited
+  sidecar. Runs `image:apply_sidecar` through `darktable-cli --luacmd`, so darktable writes the DB;
+  fails unless every sidecar printed `RELOAD ok` (a skipped `--luacmd` exits 0), then verifies with
+  `dbsync.plan()`. Research: `docs/research/lua-sidecar-reload.md`.
+- `tools/dbsync.py`: the fallback, writes `library.db` itself (not a public API). Dry run
   by default; `--write` backs the DB up, runs one transaction, and ends with
   `PRAGMA integrity_check`. Refuses to run while darktable is open, refuses divergent rows unless
   `--accept-divergent`, refuses to delete history rows unless `--allow-delete`.
@@ -60,7 +64,7 @@ call, in what order, and what pitfall to check for.
 - `darktable-cli` never overwrites its output file — it writes `NAME_01.jpg` beside it, so a
   render loop that doesn't delete the old output first ends up measuring stale data.
 - For an image already in the library, darktable trusts `library.db` over the sidecar and
-  rewrites the sidecar from the DB on open/close — hence `dbsync.py` and the guard hook.
+  rewrites the sidecar from the DB on open/close — hence `reload.py`, `dbsync.py` and the guard hook.
 - Module parameter layouts (`docs/module-params.md`, `tools/modules.json`) are never guessed:
   a field only counts as "confirmed" once a passing integration test changed it and observed the
   render move as expected. Layouts without a test are copied from a blob darktable itself wrote

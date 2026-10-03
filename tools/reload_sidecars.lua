@@ -1,12 +1,9 @@
--- EXPERIMENTAL. Reload edited XMP sidecars into darktable's library through the Lua API.
+-- Reload edited XMP sidecars into darktable's library through the Lua API (driven by tools/reload.py).
 --
 -- Input: env DARKROOM_SIDECARS, one absolute sidecar path per line.
 -- For each path, find the library image whose `sidecar` is that path, then
 -- image:apply_sidecar(path) (Lua API >= 9.5.0). darktable itself writes library.db,
--- so we need no schema knowledge. Run it inside any darktable process, e.g.
---
---   darktable-cli RAW out.jpg --width 8 --height 8 --core --configdir C --library L.db \
---     --conf write_sidecar_files=never --luacmd 'dofile("reload_sidecars.lua")'
+-- so we need no schema knowledge. Run it inside any darktable process (tools/reload.py does it through darktable-cli --luacmd).
 --
 -- Prints one line per sidecar: RELOAD <ok|FAILED|NOT_IN_LIBRARY> <path>
 local dt = require "darktable"

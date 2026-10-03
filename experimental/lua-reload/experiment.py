@@ -20,7 +20,7 @@ ROOT = os.path.join(HERE, "..", "..")
 sys.path.insert(0, os.path.join(ROOT, "tools"))
 import xmp, render  # noqa: E402
 
-LUA = os.path.join(HERE, "reload_sidecars.lua")
+LUA = os.path.join(ROOT, "tools", "reload_sidecars.lua")  # promoted to tools/ (#20)
 MINIMAL = os.path.join(ROOT, "tests", "fixtures", "minimal.xmp")
 # luacmd is skipped by darktable on a config whose Lua first run has not completed
 FIRST_RUN = ["--conf", "lua/luarc/darktable_first_run_complete=TRUE"]

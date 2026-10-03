@@ -50,7 +50,7 @@ GUI open.
 
 ## Prototype
 
-`experimental/lua-reload/reload_sidecars.lua`: takes sidecar paths in the env var
+`tools/reload_sidecars.lua` (first written under `experimental/lua-reload/`, promoted in #20): takes sidecar paths in the env var
 `DARKROOM_SIDECARS` (one per line), finds each image by its `sidecar` property, calls
 `apply_sidecar`, prints `RELOAD ok|FAILED|NOT_IN_LIBRARY path`.
 
@@ -127,6 +127,20 @@ Other findings:
 - Importing an image that is not in the library yet (`darktable.database.import`).
 - Masks, drawn-mask history and `masks_history` (the table was empty in all runs).
 - Large batches and timing (each host run is a few seconds, mostly RAW decode of the dummy).
+
+## Follow-up #20: what was settled
+
+- `tools/reload.py` and `tests/test_reload.py` implement the decision. On darktable 5.6.0 the four
+  scenarios give the same rows, `history_end` and `module_order` as `dbsync.py --write`, and
+  the render from the library is pixel identical to the render from the sidecar.
+- Bare `darktable-cli RAW out` re-reads the sidecar whatever its mtime: with the sidecar set to
+  now, to year 2000 and to year 2030, the edited history (12 rows) landed in the library each
+  time, so it does not depend on timestamps. It stays a side effect of importing a path that is
+  already in the library, not a documented reload, handles one image per run, and leaves
+  `change_timestamp` unset. `reload.py` keeps the documented Lua route.
+- `library.db.lock` holds the pid of the darktable process, NUL terminated; `reload.py` refuses on
+  a live pid. A running GUI, duplicates, new imports, masks, other versions and platforms remain
+  untested.
 
 ## Draft follow-up issue
 

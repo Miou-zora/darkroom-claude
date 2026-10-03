@@ -32,7 +32,8 @@ Requirements: darktable 5.x (tested on 5.6, macOS), Python 3 with `numpy` and `P
 | Tool | `tools/sheet.py` | Labelled contact sheet of renders, `--phone` (390 px wide) and `--pairs` (before/after). |
 | Tool | `tools/subject.py` | Bounding box of the main subject on a render, to frame crops by measurement. |
 | Tool | `tools/apply_style.py` | Apply a darktable style to sidecars (blend params, `iop_order_list` for second instances), then prove by render that every module acts. |
-| Tool | `tools/dbsync.py` | Align `library.db` on edited sidecars, dry run by default. |
+| Tool | `tools/reload.py` | Make darktable take edited sidecars through its Lua API, verified against the sidecar. |
+| Tool | `tools/dbsync.py` | Fallback: align `library.db` on edited sidecars directly, dry run by default. |
 
 ## Why this exists
 
@@ -47,13 +48,21 @@ The skills carry the method that catches these, and the tools make the safe path
 every change is rendered and measured, every write is backed up, dry-run first and verified
 pixel by pixel afterwards.
 
-## Writing to library.db
+## Reloading sidecars into the library
 
-`tools/dbsync.py` writes to darktable's internal SQLite database, which is not a public API.
-It refuses to run while darktable is open, backs the DB up, runs in one transaction, refuses
-rows where DB and sidecar already disagree unless told otherwise, and ends with
-`PRAGMA integrity_check`. The alternative is to reload each sidecar from the darktable GUI.
-A Lua-based path through darktable itself is being evaluated in [#2](https://github.com/Miou-zora/darkroom-claude/issues/2).
+For an image already in the library, darktable trusts `library.db` over the sidecar, so an edited
+sidecar must be reloaded. `tools/reload.py SIDECAR...` does it through darktable's Lua API
+(`image:apply_sidecar`) in a headless `darktable-cli`: darktable writes its own database, no
+schema is involved. It refuses while darktable is open or the library is locked, backs the DB up,
+fails unless every sidecar reports `RELOAD ok`, and checks afterwards that the library holds
+exactly the sidecar's history. Needs Lua API 9.5.0 or newer; tested on darktable 5.6.0, see
+[the research](docs/research/lua-sidecar-reload.md).
+
+`tools/dbsync.py` is the fallback for a darktable without that API or without Lua. It writes
+darktable's internal SQLite database, which is not a public API. It refuses to run while
+darktable is open, backs the DB up, runs in one transaction, refuses rows where DB and sidecar
+already disagree unless told otherwise, and ends with `PRAGMA integrity_check`. Its dry run is
+also the report `reload.py` uses to verify.
 
 ## Related projects
 
