@@ -103,3 +103,12 @@ def test_partial_eval_run_has_no_rate(tmp_path):
     (tmp_path / "evals-result.json").write_text(json.dumps(doc))
     assert kpi.evals_pass_rate(str(tmp_path)) == (None, True)
     assert row({"evals_pass_rate": None, "evals_ran": True})["evals_pass_rate"][3] == "FAIL"
+
+
+def test_pass_rate_counts_a_test_once_when_it_runs_on_two_oses(tmp_path):
+    def rec(name, outcome, plat):
+        return dict(test=name, outcome=outcome, pitfalls=[], darktable=False, platform=plat)
+    for suite, plat in (("unit", "linux"), ("unit-windows", "win32")):
+        (tmp_path / f"pytest-{suite}.json").write_text(json.dumps(
+            [rec("tests/a.py::t1", "passed", plat), rec("tests/a.py::t2", "passed", plat)]))
+    assert kpi.load_tests(str(tmp_path)) and kpi.compute(str(tmp_path))["tests_pass_rate"] == 1.0

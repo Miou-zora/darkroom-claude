@@ -15,7 +15,7 @@ Tools live in `tools/` at the plugin root (two levels above this skill's base di
 
 ## Before writing anything
 
-1. **Is darktable running?** `pgrep -x darktable`. If yes, stop and ask the user to quit it.
+1. **Is darktable running?** `pgrep -x darktable` (Windows: `tasklist /FI "IMAGENAME eq darktable.exe"`). If yes, stop and ask the user to quit it.
    Check again right before each write, not only at the start: users reopen it between steps.
    The plugin hook blocks obvious writes, but do not rely on it alone. What it sees: `cp`, `mv`,
    `tee`, `sed -i` or `>` aimed at a `.xmp`, SQL writes through `sqlite3` on `library.db`,

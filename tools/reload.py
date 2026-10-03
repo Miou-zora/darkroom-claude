@@ -20,6 +20,7 @@ Config dir: $DARKTABLE_CONFIGDIR, default ~/.config/darktable (same as dbsync.py
 import os, sys, time, shutil, sqlite3, argparse, tempfile, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dbsync, render
+from dtenv import pid_alive
 
 LUA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "reload_sidecars.lua")
 TIMEOUT = 600
@@ -29,10 +30,9 @@ def library_locked(conf):
     """darktable keeps library.db.lock with its pid (NUL terminated) while it owns the library."""
     try:
         pid = int(open(os.path.join(conf, "library.db.lock")).read().strip("\0 \n"))
-        os.kill(pid, 0)
     except (OSError, ValueError, IndexError):
         return False
-    return True
+    return pid_alive(pid)
 
 
 def default_host(db, sidecars):

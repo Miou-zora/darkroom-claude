@@ -8,7 +8,10 @@ while darktable is open is overwritten without warning.
 Reads the hook payload on stdin. Exit 2 blocks the tool call and shows stderr to Claude.
 Reads (cat, grep, python reading a file) are never blocked.
 """
-import json, os, re, subprocess, sys
+import json, os, re, sys
+
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "tools"))
+from dtenv import darktable_running  # pgrep, or tasklist on Windows
 
 WRITE_BASH = re.compile(
     r"(dbsync\.py[^|;&]*--write)"                                   # our own DB sync
@@ -44,10 +47,6 @@ def python_writes(cmd, cwd):
     return bool(PY_TARGET.search(text) and PY_WRITE.search(text))
 
 
-def darktable_running():
-    return subprocess.run(["pgrep", "-x", "darktable"], capture_output=True).returncode == 0
-
-
 def is_write(tool, inp, cwd=None):
     if tool in ("Write", "Edit", "MultiEdit", "NotebookEdit"):
         path = inp.get("file_path", "")
@@ -66,8 +65,8 @@ def main():
     if is_write(payload.get("tool_name", ""), payload.get("tool_input", {}) or {}, payload.get("cwd")) and darktable_running():
         print("darkroom-claude: darktable is running. It rewrites sidecars from library.db when it "
               "opens or closes an image, so this write would be lost or would corrupt the history. "
-              "Ask the user to quit darktable, then check again with `pgrep -x darktable` right "
-              "before writing.", file=sys.stderr)
+              "Ask the user to quit darktable, then check again (`pgrep -x darktable`, or `tasklist` "
+              "on Windows) right before writing.", file=sys.stderr)
         return 2
     return 0
 

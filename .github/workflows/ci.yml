@@ -122,9 +122,29 @@ jobs:
           name: kpi-darktable
           path: kpi/
 
+  unit-windows:
+    name: unit tests on Windows (xmp, hook, dbsync, dtenv)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: pip install -r tests/requirements.txt
+      - name: pytest
+        env:
+          KPI_DIR: kpi
+          KPI_SUITE: unit-windows
+        run: python -m pytest tests -m "not darktable" -v
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kpi-unit-windows
+          path: kpi/
+
   kpi:
     name: KPIs
-    needs: [unit, plugin, darktable]
+    needs: [unit, unit-windows, plugin, darktable]
     if: always()
     runs-on: ubuntu-latest
     steps:

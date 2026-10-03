@@ -1,0 +1,5 @@
+# Windows runners check out with CRLF otherwise; sidecar fixtures and sources are LF.
+* text=auto eol=lf
+*.ARW binary
+*.jpg binary
+*.png binary
