@@ -115,6 +115,91 @@
       {"name": "midtone", "type": "f", "default": 0.5, "test": null}
     ]
   },
+  "_masks": {
+    "_doc": "Drawn masks, darktable 5.6 (mask version 6), little-endian, 4 bytes per field. Not a module: these are the `mask_points` blobs of `darktable:masks_history` rows (and `masks_history.points` in library.db), one struct per point, `mask_nb` points, the blob length must be exactly mask_nb * size. `form` is the `mask_type` flag. Coordinates are fractions of the image the module receives (before crop), x of the width and y of the height. A field counts as confirmed only if `test` names a passing render test. See docs/research/drawn-masks.md.",
+    "version": 6,
+    "ellipse": {
+      "form": 32,
+      "size": 28,
+      "fields": [
+        {"name": "center_x", "type": "f", "test": "tests/test_masks.py::test_ellipse_center_and_radii", "note": "fraction of the image width, 0 left"},
+        {"name": "center_y", "type": "f", "test": "tests/test_masks.py::test_ellipse_center_and_radii", "note": "fraction of the image height, 0 top"},
+        {"name": "radius_a", "type": "f", "test": "tests/test_masks.py::test_ellipse_center_and_radii", "note": "x semi-axis before rotation, fraction of min(width, height)"},
+        {"name": "radius_b", "type": "f", "test": "tests/test_masks.py::test_ellipse_center_and_radii", "note": "y semi-axis before rotation, fraction of min(width, height)"},
+        {"name": "rotation", "type": "f", "test": "tests/test_masks.py::test_ellipse_rotation", "note": "degrees, positive turns clockwise on screen"},
+        {"name": "border", "type": "f", "test": "tests/test_masks.py::test_ellipse_border_and_flags", "note": "feather width beyond the radius; same unit as radius when flags is 0, share of the radius when flags is 1"},
+        {"name": "flags", "type": "i", "test": "tests/test_masks.py::test_ellipse_border_and_flags", "note": "0 equidistant border, 1 proportional border"}
+      ]
+    },
+    "circle": {
+      "form": 1,
+      "size": 16,
+      "fields": [
+        {"name": "center_x", "type": "f", "test": "tests/test_masks.py::test_circle_geometry"},
+        {"name": "center_y", "type": "f", "test": "tests/test_masks.py::test_circle_geometry"},
+        {"name": "radius", "type": "f", "test": "tests/test_masks.py::test_circle_geometry", "note": "fraction of min(width, height)"},
+        {"name": "border", "type": "f", "test": "tests/test_masks.py::test_circle_geometry", "note": "feather width beyond the radius, same unit"}
+      ]
+    },
+    "path": {
+      "form": 2,
+      "size": 36,
+      "points": "one per node, 3 minimum, the path is always closed",
+      "fields": [
+        {"name": "corner_x", "type": "f", "test": "tests/test_masks.py::test_path_geometry"},
+        {"name": "corner_y", "type": "f", "test": "tests/test_masks.py::test_path_geometry"},
+        {"name": "ctrl1_x", "type": "f", "test": "tests/test_masks.py::test_path_control_points"},
+        {"name": "ctrl1_y", "type": "f", "test": "tests/test_masks.py::test_path_control_points"},
+        {"name": "ctrl2_x", "type": "f", "test": "tests/test_masks.py::test_path_control_points"},
+        {"name": "ctrl2_y", "type": "f", "test": "tests/test_masks.py::test_path_control_points"},
+        {"name": "border_x", "type": "f", "test": "tests/test_masks.py::test_path_geometry", "note": "feather; darktable writes the same value in x and y"},
+        {"name": "border_y", "type": "f", "test": "tests/test_masks.py::test_path_geometry"},
+        {"name": "state", "type": "i", "test": null, "note": "1 normal, 2 user; darktable writes 1; no render difference observed"}
+      ]
+    },
+    "brush": {
+      "form": 64,
+      "size": 44,
+      "points": "one per stroke node",
+      "fields": [
+        {"name": "corner_x", "type": "f", "test": "tests/test_masks.py::test_brush_geometry"},
+        {"name": "corner_y", "type": "f", "test": "tests/test_masks.py::test_brush_geometry"},
+        {"name": "ctrl1_x", "type": "f", "test": null},
+        {"name": "ctrl1_y", "type": "f", "test": null},
+        {"name": "ctrl2_x", "type": "f", "test": null},
+        {"name": "ctrl2_y", "type": "f", "test": null},
+        {"name": "border_x", "type": "f", "test": "tests/test_masks.py::test_brush_geometry", "note": "half width of the stroke, fraction of min(width, height)"},
+        {"name": "border_y", "type": "f", "test": "tests/test_masks.py::test_brush_geometry"},
+        {"name": "density", "type": "f", "test": "tests/test_masks.py::test_brush_density_hardness", "note": "0 to 1, opacity of the stroke"},
+        {"name": "hardness", "type": "f", "test": "tests/test_masks.py::test_brush_density_hardness", "note": "0 to 1, edge falloff"},
+        {"name": "state", "type": "i", "test": null, "note": "1 normal, 2 user"}
+      ]
+    },
+    "gradient": {
+      "form": 16,
+      "size": 28,
+      "fields": [
+        {"name": "anchor_x", "type": "f", "test": "tests/test_masks.py::test_gradient_geometry"},
+        {"name": "anchor_y", "type": "f", "test": "tests/test_masks.py::test_gradient_geometry"},
+        {"name": "rotation", "type": "f", "test": "tests/test_masks.py::test_gradient_geometry", "note": "degrees; 0 lights the top, 90 the left, 180 the bottom, 270 the right"},
+        {"name": "compression", "type": "f", "test": "tests/test_masks.py::test_gradient_geometry", "note": "0 hard edge, 1 widest ramp"},
+        {"name": "steepness", "type": "f", "test": null, "note": "no effect seen with state 1 (linear)"},
+        {"name": "curvature", "type": "f", "test": "tests/test_masks.py::test_gradient_curvature"},
+        {"name": "state", "type": "i", "test": null, "note": "1 linear, 2 sigmoidal"}
+      ]
+    },
+    "group": {
+      "form": 4,
+      "size": 16,
+      "points": "one per member; the group's own formid is the mask_id of the blendop",
+      "fields": [
+        {"name": "formid", "type": "i", "test": "tests/test_masks.py::test_group_ops", "note": "the member's mask_id"},
+        {"name": "parentid", "type": "i", "test": null, "note": "darktable writes the group's own formid; nothing depends on it in the render"},
+        {"name": "state", "type": "i", "test": "tests/test_masks.py::test_group_opacity_and_state", "note": "bit 4 inverse, 8 union, 16 intersection, 32 difference; darktable writes 3 (use + show) for the first member and 3 + operator for the next ones"},
+        {"name": "opacity", "type": "f", "test": "tests/test_masks.py::test_group_opacity_and_state"}
+      ]
+    }
+  },
   "colorequal": {
     "version": 4, "size": 128,
     "fields": [

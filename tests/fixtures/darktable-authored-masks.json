@@ -1,0 +1,59 @@
+{
+ "_doc": "Mask rows written by darktable itself, copied from the masks_history of src/tests/benchmark/darktable-bench-4.2.xmp in the darktable source tree (values only). mask_points and mask_src keep the encoding darktable wrote (hex, or gz + factor + base64). Authored on another image (mire1.cr2): the geometry is normalized, so it applies to any image. tests/test_masks.py uses it as the reference for the byte layout.",
+ "forms": [
+  {
+   "mask_id": "1605318225",
+   "mask_type": "40",
+   "mask_name": "ellipse #1",
+   "mask_version": "6",
+   "mask_points": "886b173ec32c413f0ad7a33c75ab673c0000b4420ad7a33c00000000",
+   "mask_nb": "1",
+   "mask_src": "fff31f3ed5c04e3f"
+  },
+  {
+   "mask_id": "1605318277",
+   "mask_type": "192",
+   "mask_name": "brush #1",
+   "mask_version": "6",
+   "mask_points": "gz02eJzrCIqzfzpL1q76RKK94lY5u6l3ouxXN8jY5VSq2oIwA0OD/eGvGvaMDAwMWz4E25v6SNnVGoTZZ3tJ2r3eEGjP4CeNVe3ZywH2S5cq2x1+Gmh/1kDW7sZBf/t6KS2saj+0+Np7czraLbT0s9+qb2Znf8HH/uEjb6xqV0/3sdfZn2L3pNbH3vx3jF3hRh97xeYcrGpnyvvZsy7Mt6tY422/1yPHbvekAHvfn0VY1RZ6Rdvfu1Bh9zImwt68usrup3mcfYtaOVa1JzbE239elGoXahlnP509x85aI9He3y4eq1oAeKt4hA==",
+   "mask_nb": "8",
+   "mask_src": "0000000000000000"
+  },
+  {
+   "mask_id": "1621089435",
+   "mask_type": "9",
+   "mask_name": "circle #2",
+   "mask_version": "6",
+   "mask_points": "e606723f4ff7dc3e936c3a3d173df73b",
+   "mask_nb": "1",
+   "mask_src": "67ca683f64130d3f"
+  },
+  {
+   "mask_id": "1621089442",
+   "mask_type": "12",
+   "mask_name": "grp retouch clone",
+   "mask_version": "6",
+   "mask_points": "9bdc9f60a2dc9f60030000000000803fcbdc9f60a2dc9f600b0000000000803f",
+   "mask_nb": "2",
+   "mask_src": "0000000000000000"
+  },
+  {
+   "mask_id": "1621089483",
+   "mask_type": "40",
+   "mask_name": "ellipse #2",
+   "mask_version": "6",
+   "mask_points": "b11e753f334c593f2343a83ce675003eee7f8dc17c96d23e01000000",
+   "mask_nb": "1",
+   "mask_src": "cdc63e3f106c173f"
+  },
+  {
+   "mask_id": "1621089763",
+   "mask_type": "2",
+   "mask_name": "path #1",
+   "mask_version": "6",
+   "mask_points": "gz02eJzbziJjlxc9wXbVJlU7Bvk82yNhQnYxy1faxiyLBWNGBgaGlu8Mduah323TlzPYlTVesF3kzmhXI8Jvh6wm7ams3d8VNnYJnzntpj3Qtsu5bmiXUuiLombZ4go7ttgEu4aVUXZXdJLsnvl125n3xqGoUXu4wk7rlKHdZ+MFdgn/nO2i+jbafZsqj6KGI3GDXZ/7M1v/VRvsQko57Q6Jb7ArXrITxc0NmsvtUpv1baM1NtqpNKXYLtOaa+fH+dUGWc318xl2S6fx2T5f22AX+pfb9oFzgN13fUEUc8y5re18pO1t91x3t5t5QM12k52eHUNZOIoaAOdscvo=",
+   "mask_nb": "9",
+   "mask_src": "0000000000000000"
+  }
+ ]
+}
