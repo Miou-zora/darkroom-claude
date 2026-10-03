@@ -172,12 +172,13 @@ jobs:
           # pinned checksums (installer: the digest GitHub reports for the release asset)
           echo "bb15a8e4d24c21097cfdef0a560920f7fa0c05dec93482448dd538f2be02d6c4  /c/dt/darktable-win64.exe
           250784580ea527442c09004417bb0eead484f2bf3ee8f9121a776ac65bb50d0f  /c/dt/sample.ARW" | sha256sum -c -
-      - name: silent install (NSIS /S, /D must come last and unquoted)
+      - name: silent install (Inno Setup flags, the process is darktable-win64.tmp)
         shell: pwsh
         timeout-minutes: 10
         run: |
-          # no -Wait: it also waits for any child the installer leaves running. Poll for the binary instead.
-          $p = Start-Process -FilePath 'C:\dt\darktable-win64.exe' -ArgumentList '/S', '/D=C:\darktable' -PassThru
+          # Inno Setup, not NSIS: /S and /D= are ignored and the wizard waits for a click forever.
+          # No -Wait: it also waits for any child the installer leaves running. Poll for the binary instead.
+          $p = Start-Process -FilePath 'C:\dt\darktable-win64.exe' -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR=C:\darktable' -PassThru
           $cli = 'C:\darktable\bin\darktable-cli.exe'
           $deadline = (Get-Date).AddMinutes(6)
           while (-not (Test-Path $cli) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 5 }
