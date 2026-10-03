@@ -50,8 +50,18 @@ Never checked in the GUI, headless: that the lock then shows the expected preset
 
 ## Blend params v14
 
-Observed only: first `uint32` is `mask_mode` (0 = off, 3 = enabled + parametric mask), second
-is `blend_cst` (4 seen on every entry). Other fields not mapped yet.
+Observed only: first `uint32` is `mask_mode`, second is `blend_cst`. Bits of `mask_mode` (darktable
+source): 1 enabled, 2 drawn mask, 4 parametric, 8 raster, so **3 is enabled + drawn mask**, not
+parametric; a drawn mask needs both bits and a `blend_cst` the module blends in (4 for
+`exposure`), `mask_mode` 2 or `blend_cst` 0 silently ignore the mask (P10). `mask_id` sits at
+byte 24 and is the `formid` of the mask group. Other fields not mapped yet.
+
+## Drawn masks
+
+Not a module: the shapes of `darktable:masks_history` (ellipse, circle, path, brush, gradient,
+group) are laid out under `_masks` in `tools/modules.json`, with the render tests behind each
+field. Layouts, how a mask is wired to a module, the library.db rows and the failure modes are in
+[research/drawn-masks.md](research/drawn-masks.md).
 
 ## Contributing a layout
 

@@ -17,6 +17,8 @@ A pitfall is covered when a test carries `@pytest.mark.pitfall("Pn")` and passes
 | P7 | the same sidecar renders identically twice | without it, "pixel identical after write" proves nothing |
 | P8 | `history_end` below the entry count (undo in darktable) | entries past `history_end` are inactive; appending after them is wrong |
 | P9 | darktable trusts `library.db` over the sidecar and rewrites it on open and close | a hand-edited sidecar is silently lost |
+| P10 | a drawn mask darktable cannot resolve (group id without a row, `mask_mode` 2, `blend_cst` 0, unknown `mask_version`) | no error: the module acts on the whole image, `params ok` in the log |
+| P11 | uppercase hex in `mask_points` | `darktable-cli` segfaults and writes nothing (uppercase `params` only drops the module, P2) |
 
 P9 needs a running darktable GUI and is covered by the guard hook tests only (the hook blocks
 writes while darktable runs), not by a reproduction.
