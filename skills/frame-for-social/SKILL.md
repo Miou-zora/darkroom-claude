@@ -30,7 +30,12 @@ A subject that looks fine on a monitor can be unreadable there.
    - 40 to 70%: comfortable, with context kept.
    - Camouflaged subjects (insects on bark, grass, gravel) need more than bright ones.
 3. **Measure the subject position on a render of the current crop**, not by eye on a grid of the
-   full frame. Visual estimates put the subject against an edge or cut a flower off.
+   full frame: `python3 tools/subject.py RENDER.jpg` prints the subject's bounding box as JSON
+   (`box` in px, `box_pct`, `center_pct`, `width_share`). Use `width_share` for step 2 and
+   `box_pct` to place the crop so the box keeps a margin on every side. It finds a subject that
+   differs in colour or tone from its background; on a cluttered frame or a subject that matches
+   its background, look at the render and the box drawn on it before trusting it. An `error` or a
+   box that spans the frame means nothing was found: fall back to looking.
 4. Crop at the same aspect ratio. In `crop` coordinates, width = height x ratio x (H/W of the
    module input). Check the result renders at the expected size (off by one pixel is darktable
    rounding, harmless).

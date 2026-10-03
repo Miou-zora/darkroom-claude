@@ -258,3 +258,19 @@ def test_preset_fields_hold_plausible_values(presets):
     for n, g in each("channelmixerrgb"):
         assert g("version") == 2 and 0.2 < g("x") < 0.5 and 0.2 < g("y") < 0.5, n
         assert 1000 < g("temperature") < 25000 and g("illum_fluo") in range(10) and g("illum_led") in range(10), n
+
+
+def test_subject_box_on_a_real_render(rend, base, tmp_path):
+    """The sample is a landscape with no single subject: composite one of known position on the
+    darktable render, then check subject.py finds it through real texture and JPEG noise."""
+    import subject
+    from PIL import ImageDraw
+    res, a = rend(base, 800)
+    h, w = a.shape[:2]
+    truth = (int(w * .55), int(h * .45), int(w * .85), int(h * .85))
+    im = Image.fromarray(a.astype("uint8")); ImageDraw.Draw(im).ellipse(truth, fill=(30, 60, 230))
+    p = str(tmp_path / "subject.jpg"); im.save(p)
+    box = subject.locate(p)["box"]
+    # contains the subject, give or take a few px of blur, without swallowing the frame
+    assert box[0] <= truth[0] + 8 and box[1] <= truth[1] + 8 and box[2] >= truth[2] - 8 and box[3] >= truth[3] - 8, box
+    assert (box[2] - box[0]) * (box[3] - box[1]) < 1.5 * (truth[2] - truth[0]) * (truth[3] - truth[1]), box
