@@ -19,7 +19,7 @@ Config dir: $DARKTABLE_CONFIGDIR, default ~/.config/darktable (same as dbsync.py
 """
 import os, sys, time, shutil, sqlite3, argparse, tempfile, subprocess
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-import dbsync, render
+import dbsync, dtenv, render
 from dtenv import pid_alive
 
 LUA = os.path.join(os.path.dirname(os.path.abspath(__file__)), "reload_sidecars.lua")
@@ -47,7 +47,7 @@ def default_host(db, sidecars):
 def run_lua(conf, host, sidecars):
     """One darktable-cli run hosting the Lua script. Returns (exit code, output lines)."""
     with tempfile.TemporaryDirectory() as tmp:
-        cmd = [render.cli(), host, os.path.join(tmp, "host.jpg"), "--width", "8", "--height", "8",
+        cmd = [render.cli(), host, dtenv.out_arg(os.path.join(tmp, "host.jpg")), "--width", "8", "--height", "8",
                "--core", "--configdir", conf, "--library", os.path.join(conf, "library.db"),
                "--conf", "write_sidecar_files=never",
                "--conf", "lua/luarc/darktable_first_run_complete=TRUE",

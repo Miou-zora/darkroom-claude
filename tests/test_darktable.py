@@ -2,11 +2,11 @@
 
 Each test reproduces one pitfall of docs/pitfalls.md. If one fails, darktable changed
 behaviour and the skills give wrong advice: fix the skill, not the test."""
-import os, shutil, subprocess
+import json, os, shutil, subprocess, sys, time
 import numpy as np
 import pytest
 from PIL import Image
-import render, xmp
+import dtenv, render, xmp
 
 pytestmark = pytest.mark.darktable
 SIZE = 400
@@ -112,7 +112,7 @@ def test_last_entry_wins(rend, base):
 def test_cli_never_overwrites(tmp_path, sample_raw, darktable_cli, base):
     side = tmp_path / "a.xmp"; side.write_text(base)
     out = tmp_path / "out.jpg"
-    cmd = [darktable_cli, sample_raw, str(side), str(out), "--width", "200", "--height", "200",
+    cmd = [darktable_cli, sample_raw, str(side), dtenv.out_arg(out), "--width", "200", "--height", "200",
            "--core", "--configdir", str(tmp_path / "conf"), "--library", ":memory:"]
     for _ in range(2):
         subprocess.run(cmd, capture_output=True, check=True)
@@ -317,3 +317,29 @@ def test_crop_aspect_gives_the_requested_aspect(rend, base):
     right = (bottom - top) * h * 0.8 / w
     cw, ch = crop_dims(rend, base, (0.0, top, right, bottom), 4, 5)
     assert cw % 4 == 0 and ch % 5 == 0 and abs(cw / ch - 0.8) < 0.002, (cw, ch)
+
+
+@pytest.mark.skipif(sys.platform != "win32", reason="darktable.exe and tasklist: the Windows process check")
+def test_hook_blocks_sidecar_write_while_real_darktable_exe_runs(tmp_path, darktable_cli):
+    """#9: the PreToolUse hook against a real darktable.exe process, no mocked process list."""
+    exe = os.path.join(os.path.dirname(darktable_cli), "darktable.exe")
+    if not os.path.exists(exe):
+        pytest.skip("darktable.exe not installed next to darktable-cli")
+    hook = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "hooks", "guard_darktable_open.py")
+    payload = json.dumps({"tool_name": "Write", "tool_input": {"file_path": str(tmp_path / "DSC1.ARW.xmp")}})
+
+    def hook_rc():
+        return subprocess.run([sys.executable, hook], input=payload, capture_output=True, text=True).returncode
+
+    assert hook_rc() == 0, "no darktable.exe yet: the write must pass"
+    p = subprocess.Popen([exe, "--configdir", str(tmp_path / "conf"), "--library", ":memory:"],
+                         stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    try:
+        for _ in range(60):
+            if dtenv.darktable_running():
+                break
+            time.sleep(1)
+        assert dtenv.darktable_running(), "darktable.exe never showed up in tasklist"
+        assert hook_rc() == 2
+    finally:
+        subprocess.run(["taskkill", "/F", "/T", "/PID", str(p.pid)], capture_output=True)

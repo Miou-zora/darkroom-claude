@@ -128,3 +128,11 @@ def test_pid_alive_on_posix():
     import os
     assert dtenv.pid_alive(os.getpid()) is True
     assert dtenv.pid_alive(999999999) is False
+
+
+def test_out_arg_forward_slashes_on_windows_only(monkeypatch):
+    # darktable-cli expands variables in the output path and drops backslashes (#31)
+    monkeypatch.setattr(sys, "platform", "win32")
+    assert dtenv.out_arg("C:\\Users\\a\\Temp\\out.jpg") == "C:/Users/a/Temp/out.jpg"
+    monkeypatch.setattr(sys, "platform", "linux")
+    assert dtenv.out_arg("/tmp/out.jpg") == "/tmp/out.jpg"

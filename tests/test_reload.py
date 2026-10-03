@@ -5,7 +5,7 @@ import hashlib, os, re, shutil, sqlite3, subprocess, sys
 import numpy as np
 import pytest
 from PIL import Image
-import dbsync, reload, render, xmp
+import dbsync, dtenv, reload, render, xmp
 from test_dbsync import SCHEMA
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -85,7 +85,7 @@ def dt(conf, raw, out, size=8, sidecars="never", from_db=False):
     if os.path.exists(out):
         os.remove(out)
     lib = os.path.join(conf, "library.db")
-    cmd = [render.cli(), raw, out, "--hq", "true", "--upscale", "false", "--apply-custom-presets", "false",
+    cmd = [render.cli(), raw, dtenv.out_arg(out), "--hq", "true", "--upscale", "false", "--apply-custom-presets", "false",
            "--width", str(size), "--height", str(size)]
     if from_db:
         cmd += ["--library", lib]  # CLI option, so before --core
