@@ -187,10 +187,11 @@ jobs:
           Get-ChildItem $cli
           & C:\darktable\bin\darktable-cli.exe --version
       - name: pytest (darktable)
-        timeout-minutes: 15
+        timeout-minutes: 25
         env:
           KPI_DIR: kpi
           KPI_SUITE: darktable-windows
+          DARKROOM_RENDER_TIMEOUT: "120"
           DARKTABLE_CLI: C:\darktable\bin\darktable-cli.exe
           DARKROOM_SAMPLE: C:\dt\sample.ARW
         run: python -m pytest tests -m darktable -v

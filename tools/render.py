@@ -21,6 +21,7 @@ import dtenv
 
 CANDIDATES = dtenv.cli_candidates()
 CONF = os.path.join(dtenv.cache_dir(), "darkroom-claude", "dtconf")
+TIMEOUT = int(os.environ.get("DARKROOM_RENDER_TIMEOUT", 600))  # seconds
 
 
 def cli():
@@ -44,11 +45,18 @@ def render(raw, xmp, out, size=1080, height=None):
         cmd += ["--width", str(size), "--height", str(height or size)]
     cmd += ["--core", "--configdir", CONF, "--library", ":memory:",
             "--conf", "write_sidecar_files=never", "-d", "params"]
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    loaded, wrong = parse_params_log(r.stdout + r.stderr)
-    res = dict(exit=r.returncode, modules_loaded=loaded, params_wrong=wrong, written=os.path.exists(out))
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=TIMEOUT)
+        code, log = r.returncode, r.stdout + r.stderr
+    except subprocess.TimeoutExpired as e:  # a hung darktable-cli (crash dialog on Windows) must not hang the caller
+        code, log = -1, "".join(x.decode("utf-8", "replace") if isinstance(x, bytes) else x or "" for x in (e.stdout, e.stderr))
+        log += "\nTIMEOUT after %ss" % TIMEOUT
+        if sys.platform == "win32":  # THROWAWAY (#31)
+            log += "\n" + subprocess.run(["tasklist"], capture_output=True, text=True).stdout
+    loaded, wrong = parse_params_log(log)
+    res = dict(exit=code, modules_loaded=loaded, params_wrong=wrong, written=os.path.exists(out))
     if not res["written"]:
-        res["log_tail"] = (r.stdout + r.stderr)[-600:]  # darktable-cli says why, or where it wrote instead
+        res["log_tail"] = log[-1500:]  # darktable-cli says why, or where it wrote instead
     return res
 
 
