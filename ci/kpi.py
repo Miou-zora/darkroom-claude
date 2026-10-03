@@ -51,7 +51,8 @@ def compute(d):
     k = {}
     k["tests_total"] = len(tests)
     k["tests_failed"] = len(failed)
-    k["tests_pass_rate"] = round(len(passed) / len(tests), 4) if tests else None
+    # the same test runs on several OSes: count distinct names, not records, on both sides
+    k["tests_pass_rate"] = round(len(passed) / len({t["test"] for t in tests}), 4) if tests else None
     k["darktable_tests_run"] = sum(1 for t in dt if t["outcome"] != "skipped")
     k["darktable_tests_run_by_os"] = {}  # informational; the ratchet applies to the total
     for t in dt:
