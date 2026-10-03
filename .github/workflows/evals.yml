@@ -1,0 +1,70 @@
+name: evals
+
+# Manual only: every run is a real model call billed to ANTHROPIC_API_KEY.
+# Not part of ci.yml on purpose, see "Evals" in CONTRIBUTING.md.
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: "Runs per case"
+        default: "3"
+      threshold:
+        description: "A case passes at this score or above (0 to 1)"
+        default: "0.8"
+      max_cost_usd:
+        description: "Cost ceiling (list-price estimate)"
+        default: "10"
+      model:
+        description: "Model under test"
+        default: "claude-sonnet-5"
+      judge_model:
+        description: "Model for llm graders"
+        default: "claude-haiku-4-5"
+
+jobs:
+  evals:
+    name: plugin evals
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm install -g @anthropic-ai/claude-code
+      - name: fake darktable process (the hook looks for one)
+        run: ci/fake-darktable.sh start
+      - name: claude plugin eval
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RUNS: ${{ inputs.runs }}
+          THRESHOLD: ${{ inputs.threshold }}
+          MODEL: ${{ inputs.model }}
+          JUDGE_MODEL: ${{ inputs.judge_model }}
+          MAX_COST: ${{ inputs.max_cost_usd }}
+        run: |
+          mkdir -p kpi
+          claude plugin eval . \
+            --trust-plugin --scaffold \
+            --allow-tools Write Edit \
+            --ablation none \
+            --runs "$RUNS" \
+            --threshold "$THRESHOLD" \
+            --model "$MODEL" \
+            --judge-model "$JUDGE_MODEL" \
+            --max-cost-usd "$MAX_COST" \
+            --concurrency 2 \
+            --no-publish \
+            --json kpi/evals-result.json
+      - name: evals_pass_rate KPI
+        if: always()
+        run: python3 ci/kpi.py kpi --only evals_pass_rate
+      - name: stop fake darktable
+        if: always()
+        run: ci/fake-darktable.sh stop
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: kpi-evals
+          path: |
+            kpi/
+            evals/results/
