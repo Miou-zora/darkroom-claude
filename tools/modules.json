@@ -1,5 +1,5 @@
 {
-  "_doc": "Parameter layouts, darktable 5.6, little-endian, every field 4 bytes (f float, i int or enum). A field counts as confirmed in the CI KPIs only if `test` names an integration test that passes in the same run. Human-checked fields without a test keep `test: null`. `default` is the value darktable gives a new instance (from dt_iop_*_params_t in src/iop/*.c); it is what xmp.default_params() writes.",
+  "_doc": "Parameter layouts, darktable 5.6, little-endian, every field 4 bytes (f float, i int or enum). A field counts as confirmed in the CI KPIs only if `test` names an integration test that passes in the same run. Human-checked fields without a test keep `test: null`. `default` is the value darktable gives a new instance (from dt_iop_*_params_t in src/iop/*.c); it is what xmp.default_params() writes, and a module with a field lacking one has no default_params (toneequal enums, channelmixerrgb). Every layout is also checked against the blobs of darktable's built-in presets by tests/test_darktable.py::test_preset_*.",
   "crop": {
     "version": 3, "size": 24,
     "fields": [
@@ -78,6 +78,121 @@
       {"name": "grey_fulcrum", "type": "f", "default": 0.1845, "test": null},
       {"name": "contrast", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_colorbalancergb_contrast"},
       {"name": "saturation_formula", "type": "i", "default": 1, "test": null, "note": "0 JzAzBz, 1 DT UCS"}
+    ]
+  },
+  "toneequal": {
+    "version": 2, "size": 72,
+    "fields": [
+      {"name": "noise", "type": "f", "default": 0.0, "test": null},
+      {"name": "ultra_deep_blacks", "type": "f", "default": 0.0, "test": null},
+      {"name": "deep_blacks", "type": "f", "default": 0.0, "test": null},
+      {"name": "blacks", "type": "f", "default": 0.0, "test": null},
+      {"name": "shadows", "type": "f", "default": 0.0, "test": null, "note": "-4 EV band sits below the 5th percentile of the sample, its effect is not measurable on it"},
+      {"name": "midtones", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_toneequal_bands_follow_tonal_order"},
+      {"name": "highlights", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_toneequal_bands_follow_tonal_order"},
+      {"name": "whites", "type": "f", "default": 0.0, "test": "tests/test_darktable.py::test_toneequal_bands_follow_tonal_order"},
+      {"name": "speculars", "type": "f", "default": 0.0, "test": null},
+      {"name": "blending", "type": "f", "default": 5.0, "test": null},
+      {"name": "smoothing", "type": "f", "default": 1.414213562, "test": null},
+      {"name": "feathering", "type": "f", "default": 1.0, "test": null},
+      {"name": "quantization", "type": "f", "default": 0.0, "test": null},
+      {"name": "contrast_boost", "type": "f", "default": 0.0, "test": null},
+      {"name": "exposure_boost", "type": "f", "default": 0.0, "test": null},
+      {"name": "details", "type": "i", "test": null, "note": "0 none, 1 averaged guided, 2 guided, 3 averaged EIGF, 4 EIGF"},
+      {"name": "method", "type": "i", "test": null, "note": "luminance mask method enum, 4 on every built-in preset"},
+      {"name": "iterations", "type": "i", "default": 1, "test": null}
+    ]
+  },
+  "bilat": {
+    "version": 3, "size": 20,
+    "fields": [
+      {"name": "mode", "type": "i", "default": 1, "test": null, "note": "0 bilateral, 1 local laplacian"},
+      {"name": "sigma_r", "type": "f", "default": 0.5, "test": null},
+      {"name": "sigma_s", "type": "f", "default": 0.5, "test": null},
+      {"name": "detail", "type": "f", "default": 0.25, "test": "tests/test_darktable.py::test_bilat_detail"},
+      {"name": "midtone", "type": "f", "default": 0.5, "test": null}
+    ]
+  },
+  "colorequal": {
+    "version": 4, "size": 128,
+    "fields": [
+      {"name": "threshold", "type": "f", "default": 0.1, "test": null},
+      {"name": "smoothing_hue", "type": "f", "default": 1.0, "test": null},
+      {"name": "contrast", "type": "f", "default": 0.0, "test": null},
+      {"name": "white_level", "type": "f", "default": 1.0, "test": null},
+      {"name": "chroma_size", "type": "f", "default": 1.5, "test": null},
+      {"name": "param_size", "type": "f", "default": 1.0, "test": null},
+      {"name": "use_filter", "type": "i", "default": 1, "test": null},
+      {"name": "sat_red", "type": "f", "default": 1.0, "test": null},
+      {"name": "sat_orange", "type": "f", "default": 1.0, "test": null},
+      {"name": "sat_yellow", "type": "f", "default": 1.0, "test": null},
+      {"name": "sat_green", "type": "f", "default": 1.0, "test": null},
+      {"name": "sat_cyan", "type": "f", "default": 1.0, "test": null},
+      {"name": "sat_blue", "type": "f", "default": 1.0, "test": null},
+      {"name": "sat_lavender", "type": "f", "default": 1.0, "test": null},
+      {"name": "sat_magenta", "type": "f", "default": 1.0, "test": null},
+      {"name": "hue_red", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_orange", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_yellow", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_green", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_cyan", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_blue", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_lavender", "type": "f", "default": 0.0, "test": null},
+      {"name": "hue_magenta", "type": "f", "default": 0.0, "test": null},
+      {"name": "bright_red", "type": "f", "default": 1.0, "test": null},
+      {"name": "bright_orange", "type": "f", "default": 1.0, "test": null},
+      {"name": "bright_yellow", "type": "f", "default": 1.0, "test": null},
+      {"name": "bright_green", "type": "f", "default": 1.0, "test": null},
+      {"name": "bright_cyan", "type": "f", "default": 1.0, "test": null},
+      {"name": "bright_blue", "type": "f", "default": 1.0, "test": null},
+      {"name": "bright_lavender", "type": "f", "default": 1.0, "test": null},
+      {"name": "bright_magenta", "type": "f", "default": 1.0, "test": null},
+      {"name": "hue_shift", "type": "f", "default": 0.0, "test": null}
+    ]
+  },
+  "channelmixerrgb": {
+    "version": 3, "size": 160,
+    "fields": [
+      {"name": "red_0", "type": "f", "test": null},
+      {"name": "red_1", "type": "f", "test": null},
+      {"name": "red_2", "type": "f", "test": null},
+      {"name": "red_3", "type": "f", "test": null},
+      {"name": "green_0", "type": "f", "test": null},
+      {"name": "green_1", "type": "f", "test": null},
+      {"name": "green_2", "type": "f", "test": null},
+      {"name": "green_3", "type": "f", "test": null},
+      {"name": "blue_0", "type": "f", "test": null},
+      {"name": "blue_1", "type": "f", "test": null},
+      {"name": "blue_2", "type": "f", "test": null},
+      {"name": "blue_3", "type": "f", "test": null},
+      {"name": "saturation_0", "type": "f", "test": null},
+      {"name": "saturation_1", "type": "f", "test": null},
+      {"name": "saturation_2", "type": "f", "test": null},
+      {"name": "saturation_3", "type": "f", "test": null},
+      {"name": "lightness_0", "type": "f", "test": null},
+      {"name": "lightness_1", "type": "f", "test": null},
+      {"name": "lightness_2", "type": "f", "test": null},
+      {"name": "lightness_3", "type": "f", "test": null},
+      {"name": "grey_0", "type": "f", "test": null},
+      {"name": "grey_1", "type": "f", "test": null},
+      {"name": "grey_2", "type": "f", "test": null},
+      {"name": "grey_3", "type": "f", "test": null},
+      {"name": "normalize_R", "type": "i", "test": null},
+      {"name": "normalize_G", "type": "i", "test": null},
+      {"name": "normalize_B", "type": "i", "test": null},
+      {"name": "normalize_sat", "type": "i", "test": null},
+      {"name": "normalize_light", "type": "i", "test": null},
+      {"name": "normalize_grey", "type": "i", "test": null},
+      {"name": "illuminant", "type": "i", "test": null, "note": "enum, 0 on the basic channel mixer preset"},
+      {"name": "illum_fluo", "type": "i", "test": null, "note": "2 on built-in presets"},
+      {"name": "illum_led", "type": "i", "test": null, "note": "4 on built-in presets"},
+      {"name": "adaptation", "type": "i", "test": null},
+      {"name": "x", "type": "f", "test": null, "note": "0.3457 on built-in presets (D50)"},
+      {"name": "y", "type": "f", "test": null, "note": "0.3585 on built-in presets (D50)"},
+      {"name": "temperature", "type": "f", "test": null, "note": "5003 on built-in presets"},
+      {"name": "gamut", "type": "f", "test": null},
+      {"name": "clip", "type": "i", "test": null},
+      {"name": "version", "type": "i", "test": null, "note": "2 = CHANNELMIXERRGB_V_3"}
     ]
   }
 }

@@ -47,7 +47,7 @@ def test_unknown_version_refused():
     with pytest.raises(ValueError, match="no layout"):
         xmp.get_field(xmp.default_params("sigmoid", 3), "sigmoid", 4, "contrast_skewness")
     with pytest.raises(ValueError, match="no layout"):
-        xmp.default_params("toneequal", 2)
+        xmp.default_params("denoiseprofile", 12)
 
 
 def test_unknown_field_and_wrong_size_refused():
