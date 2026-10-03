@@ -6,6 +6,8 @@
 - Isolated config dir and in-memory library: never touches the user's library.db.
 - OUT is deleted first: darktable-cli never overwrites, it writes OUT_01.jpg next
   to it, and a tuning loop would silently keep measuring the old file.
+- Windows: darktable-cli drops the backslashes of OUT (variable expansion): it is passed with
+  forward slashes (dtenv.out_arg), else the file lands in `C:name.jpg` and `written` is False.
 - `-d params` is parsed per module: `params_wrong` lists modules whose blob failed to
   decode (those are dropped from the render). Exit code 1 if any.
 - --phone also writes OUT.phone.png at 390 px wide, the size of a feed post on a phone.
@@ -51,8 +53,6 @@ def render(raw, xmp, out, size=1080, height=None):
     except subprocess.TimeoutExpired as e:  # a hung darktable-cli (crash dialog on Windows) must not hang the caller
         code, log = -1, "".join(x.decode("utf-8", "replace") if isinstance(x, bytes) else x or "" for x in (e.stdout, e.stderr))
         log += "\nTIMEOUT after %ss" % TIMEOUT
-        if sys.platform == "win32":  # THROWAWAY (#31)
-            log += "\n" + subprocess.run(["tasklist"], capture_output=True, text=True).stdout
     loaded, wrong = parse_params_log(log)
     res = dict(exit=code, modules_loaded=loaded, params_wrong=wrong, written=os.path.exists(out))
     if not res["written"]:
