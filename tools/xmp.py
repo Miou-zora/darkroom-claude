@@ -39,9 +39,10 @@ def history_end(x):
 
 
 def append(x, operation, modversion, params, enabled=1, multi_priority=0,
-           multi_name="", blendop=NEUTRAL_BLEND):
+           multi_name="", blendop=NEUTRAL_BLEND, blendop_version=14):
     """Append one history entry. `params` are raw bytes, written as lowercase hex:
-    uppercase hex is decoded as garbage and the module is silently dropped."""
+    uppercase hex is decoded as garbage and the module is silently dropped.
+    `blendop` is the blend blob as written in the sidecar (hex or 'gz..'), at `blendop_version`."""
     ents, end = entries(x), history_end(x)
     if end != len(ents):
         raise ValueError(f"history_end {end} != {len(ents)} entries: the history was "
@@ -55,7 +56,7 @@ def append(x, operation, modversion, params, enabled=1, multi_priority=0,
           f'      darktable:multi_name="{multi_name}"\n'
           f'      darktable:multi_name_hand_edited="0"\n'
           f'      darktable:multi_priority="{multi_priority}"\n'
-          f'      darktable:blendop_version="14"\n'
+          f'      darktable:blendop_version="{blendop_version}"\n'
           f'      darktable:blendop_params="{blendop}"/>')
     i = x.index("</rdf:Seq>", x.index("<darktable:history>"))
     x = x[:i].rstrip() + li + "\n    " + x[i:]
