@@ -47,6 +47,11 @@ def render(raw, xmp, out, size=1080, height=None):
         cmd += ["--width", str(size), "--height", str(height or size)]
     cmd += ["--core", "--configdir", CONF, "--library", ":memory:",
             "--conf", "write_sidecar_files=never", "-d", "params"]
+    if sys.platform == "win32":
+        # The first darktable-cli of a Windows CI job hung in about 3 runs out of 7, right after the
+        # rawspeed init (#31). OpenCL is the suspect (probed there, no GPU on the runner); CPU is also
+        # the one reference path for pixel diffs.
+        cmd.append("--disable-opencl")
     try:
         r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=TIMEOUT)
         code, log = r.returncode, r.stdout + r.stderr
