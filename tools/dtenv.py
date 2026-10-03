@@ -29,6 +29,24 @@ def darktable_running():
         return True
 
 
+def pid_alive(pid):
+    """True when a process with this pid exists. os.kill(pid, 0) is not a probe on Windows:
+    signal 0 is CTRL_C_EVENT there and interrupts the target. Fails closed like darktable_running."""
+    try:
+        if _win():
+            r = subprocess.run(["tasklist", "/FI", f"PID eq {int(pid)}", "/NH", "/FO", "CSV"],
+                               capture_output=True, text=True, encoding="utf-8", errors="replace")
+            return r.returncode != 0 or f'"{int(pid)}"' in r.stdout
+        os.kill(pid, 0)
+        return True
+    except PermissionError:
+        return True  # exists, owned by someone else
+    except ProcessLookupError:
+        return False
+    except OSError:
+        return True
+
+
 def config_dir():
     env = os.environ.get("DARKTABLE_CONFIGDIR")
     if env:

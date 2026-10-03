@@ -108,3 +108,23 @@ def test_locate_matches_windows_style_folder(tmp_path, monkeypatch):
     db.execute("insert into film_rolls values (1, ?)", (stored,))
     db.execute("insert into images values (7, 1, 'A.ARW', 0)")
     assert dbsync.locate(db, str(side))[0] == 7
+
+
+def test_pid_alive_on_windows_reads_tasklist_and_never_signals(monkeypatch):
+    import os
+    monkeypatch.setattr(sys, "platform", "win32")
+    monkeypatch.setattr(os, "kill", lambda *a: pytest.fail("os.kill(pid, 0) is CTRL_C_EVENT on Windows"))
+    calls = fake_run(monkeypatch, Done(0, '"darktable.exe","4242","Console","1","310,000 K"\r\n'))
+    assert dtenv.pid_alive(4242) is True
+    assert calls == [["tasklist", "/FI", "PID eq 4242", "/NH", "/FO", "CSV"]]
+    fake_run(monkeypatch, Done(0, "INFO: No tasks are running which match the specified criteria.\r\n"))
+    assert dtenv.pid_alive(4242) is False
+    fake_run(monkeypatch, OSError("no tasklist"))
+    assert dtenv.pid_alive(4242) is True  # fails closed
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="posix probe")
+def test_pid_alive_on_posix():
+    import os
+    assert dtenv.pid_alive(os.getpid()) is True
+    assert dtenv.pid_alive(999999999) is False
