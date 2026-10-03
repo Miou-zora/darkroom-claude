@@ -145,6 +145,7 @@ jobs:
   darktable-windows:
     name: integration on darktable (Windows)
     runs-on: windows-latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash
@@ -173,10 +174,16 @@ jobs:
           250784580ea527442c09004417bb0eead484f2bf3ee8f9121a776ac65bb50d0f  /c/dt/sample.ARW" | sha256sum -c -
       - name: silent install (NSIS /S, /D must come last and unquoted)
         shell: pwsh
+        timeout-minutes: 10
         run: |
-          $p = Start-Process -FilePath 'C:\dt\darktable-win64.exe' -ArgumentList '/S', '/D=C:\darktable' -Wait -PassThru
-          if ($p.ExitCode -ne 0) { throw "installer exit code $($p.ExitCode)" }
-          Get-ChildItem C:\darktable\bin\darktable-cli.exe
+          # no -Wait: it also waits for any child the installer leaves running. Poll for the binary instead.
+          $p = Start-Process -FilePath 'C:\dt\darktable-win64.exe' -ArgumentList '/S', '/D=C:\darktable' -PassThru
+          $cli = 'C:\darktable\bin\darktable-cli.exe'
+          $deadline = (Get-Date).AddMinutes(6)
+          while (-not (Test-Path $cli) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 5 }
+          Start-Sleep -Seconds 10  # let the installer finish writing
+          if (-not (Test-Path $cli)) { throw "darktable-cli.exe not installed after 6 min (installer exited: $($p.HasExited))" }
+          Get-ChildItem $cli
           & C:\darktable\bin\darktable-cli.exe --version
       - name: pytest (darktable)
         env:
