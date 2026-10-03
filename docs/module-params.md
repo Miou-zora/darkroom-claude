@@ -9,7 +9,7 @@ never guessed.
 
 | Module | Version | Size | Layout |
 |---|---|---|---|
-| `crop` | 3 | 24 B | `float left, top, right, bottom` (0 to 1, relative to the module input, after `flip` and `ashift`), `int ratio_n, ratio_d` |
+| `crop` | 3 | 24 B | `float left, top, right, bottom` (0 to 1, relative to the module input, after `flip` and `ashift`), `int ratio_n, ratio_d` (the aspect lock, see below) |
 | `exposure` | 7 | 28 B | `int mode` (0 manual), `float black`, `float exposure` (EV), `float deflicker_percentile`, `float deflicker_target`, `int compensate_camera_exposure`, `int` (mode, black, exposure confirmed; the rest named from darktable source, untested) |
 | `sigmoid` | 3 | 56 B | `float middle_grey_contrast, contrast_skewness, display_white_target, display_black_target`, `int color_processing`, `float hue_preservation, red_inset, red_rotation, green_inset, green_rotation, blue_inset, blue_rotation, purity`, `int base_primaries` (middle_grey_contrast and contrast_skewness confirmed by a render test, the rest cross-checked against darktable's built-in presets) |
 | `colorbalancergb` | 5 | 132 B | 33 fields, 32 `float` then `int saturation_formula`: shadows/midtones/highlights/global `_Y,_C,_H`, weights and fulcrums, `chroma_*`, `saturation_*`, `hue_angle`, `brilliance_*`, `vibrance`, `contrast` (saturation_global, vibrance and contrast confirmed by a render test, the rest cross-checked against darktable's built-in presets; full order in `tools/modules.json`) |
@@ -24,6 +24,23 @@ Sizes only (copied as whole blobs, fields not individually confirmed): `denoisep
 
 `tools/modules.json` is the machine-readable form of this table; `xmp.get_field`, `set_field` and
 `default_params` read it and refuse a module or version it does not list.
+
+## crop ratio_n and ratio_d
+
+The aspect lock of the crop module, kept so the GUI still holds the aspect when the crop is
+edited by hand. `ratio_d` is the long side, `ratio_n` the short side (4:5 is `n=4, d=5`; 3:2 is
+`n=2, d=3`); `crop_params(..., aspect=(4, 5))` writes them. `ratio_d` is negative when the crop is
+oriented the other way than the module input: a landscape 4:3 crop of a portrait image is
+`n=3, d=-4`. `0/0` is freehand (what `crop_params` wrote before), `n=0` with `|d|=1` is "original
+image".
+
+What a render shows (darktable 5.6, `darktable-cli`, `test_crop_ratio_trims_to_the_ratio`): the
+rectangle comes from the four edges only, but an export trims it to a multiple of the ratio, the
+long side `d` with the long side of the crop, `n` with the short one (a 3628 x 2012 crop with 5:4
+exports at 3625 x 2012). 1:1 trimmed nothing in a probe; a reduced side above 16 trims nothing according to the source (untested). The sign
+changes nothing in an export: it is known from darktable's source (`src/iop/crop.c`, `_commit_box`,
+`_aspect_apply`) and from sidecars darktable wrote (`3,-4` and `2,3` in #11), not from a render.
+Never checked in the GUI, headless: that the lock then shows the expected preset.
 
 ## Blobs in XMP
 

@@ -33,7 +33,8 @@ Tools live in `tools/` at the plugin root (two levels above this skill's base di
   `data.db` table `presets`, a style in `style_items`) and change one field. Confirm which field
   moved by rendering two values: the effect must go the expected way.
 - Known layouts (darktable 5.6): `crop` v3 = 4 floats left, top, right, bottom (normalized to the
-  module input, after `flip` and `ashift`) + 2 ints ratio. `exposure` v7 = int mode, float
+  module input, after `flip` and `ashift`) + 2 ints ratio (the GUI aspect lock: pass
+  `crop_params(..., aspect=(4, 5))` rather than leaving 0/0). `exposure` v7 = int mode, float
   black, float exposure, float, float, int, int. See `docs/module-params.md`.
 - Blend params: copy the `blendop_params` of an existing entry (neutral = mask_mode 0), with
   `blendop_version="14"`. Parametric masks (mask_mode 3) depend on pixel values, not on

@@ -274,3 +274,46 @@ def test_subject_box_on_a_real_render(rend, base, tmp_path):
     # contains the subject, give or take a few px of blur, without swallowing the frame
     assert box[0] <= truth[0] + 8 and box[1] <= truth[1] + 8 and box[2] >= truth[2] - 8 and box[3] >= truth[3] - 8, box
     assert (box[2] - box[0]) * (box[3] - box[1]) < 1.5 * (truth[2] - truth[0]) * (truth[3] - truth[1]), box
+
+
+# crop ratio_n / ratio_d. In an export pipeline darktable trims the crop to a multiple of the
+# ratio on each side (modify_roi_out in src/iop/crop.c): the long side d goes with the long
+# side of the crop, the short side n with the short one. 0/0 is freehand and trims nothing. The
+# sign of ratio_d only flips the orientation shown in the GUI, which an export cannot observe.
+
+def crop_dims(rend, base, edges, n=0, d=0):
+    res, a = rend(xmp.append(base, "crop", 3, xmp.crop_params(*edges, ratio_n=n, ratio_d=d)), size=0)
+    assert res["params_wrong"] == [] and "crop" in res["modules_loaded"], res
+    return a.shape[1], a.shape[0]
+
+
+def trimmed(w, h, n, d):
+    aw, ah = (d, n) if w >= h else (n, d)
+    return w - w % aw, h - h % ah
+
+
+LANDSCAPE = (0.1, 0.1, 0.7, 0.5993)
+PORTRAIT = (0.1, 0.1, 0.4, 0.9)
+
+
+def test_crop_ratio_trims_to_the_ratio(rend, base):
+    """One test for both fields (a parametrized id would not match the `test` of modules.json).
+    Swapping n and d, or the landscape and portrait crops, trims the other side."""
+    for edges, n, d in [(LANDSCAPE, 4, 5), (LANDSCAPE, 5, 4), (LANDSCAPE, 2, 3), (PORTRAIT, 4, 5), (PORTRAIT, 5, 4)]:
+        w0, h0 = crop_dims(rend, base, edges)
+        w, h = crop_dims(rend, base, edges, n, d)
+        assert (w, h) == trimmed(w0, h0, n, d), (edges, n, d, (w0, h0), (w, h))
+        assert (w, h) != (w0, h0), f"ratio {n}/{d} had no effect on {edges}: pick other edges"
+
+
+def test_crop_ratio_sign_does_not_change_the_export(rend, base):
+    assert crop_dims(rend, base, LANDSCAPE, 4, -5) == crop_dims(rend, base, LANDSCAPE, 4, 5)
+
+
+def test_crop_aspect_gives_the_requested_aspect(rend, base):
+    _, full = rend(base, size=0)
+    h, w = full.shape[:2]
+    top, bottom = 0.05, 0.95
+    right = (bottom - top) * h * 0.8 / w
+    cw, ch = crop_dims(rend, base, (0.0, top, right, bottom), 4, 5)
+    assert cw % 4 == 0 and ch % 5 == 0 and abs(cw / ch - 0.8) < 0.002, (cw, ch)

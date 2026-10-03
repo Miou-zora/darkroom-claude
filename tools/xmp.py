@@ -11,7 +11,7 @@ modules.json: get_field(), set_field(), default_params().
 Existing entries are never modified: darktable keeps the last entry of each
 (operation, multi_priority) pair, so a change is always a new entry.
 """
-import re, struct, base64, zlib, sys, json, os
+import re, struct, base64, zlib, sys, json, os, math
 
 LAYOUTS = json.load(open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "modules.json")))
 
@@ -73,8 +73,25 @@ def with_iop_order_list(x, iop_list):
     return x[:m.end()] + f'\n   darktable:iop_order_list="{iop_list}"' + x[m.end():]
 
 
-def crop_params(left, top, right, bottom, ratio_n=0, ratio_d=0):
-    """crop v3. Edges are normalized to the module input, i.e. after flip and ashift."""
+def crop_params(left, top, right, bottom, ratio_n=0, ratio_d=0, aspect=None):
+    """crop v3. Edges are normalized to the module input, i.e. after flip and ashift.
+
+    `aspect=(w, h)` is the aspect of the crop in pixels, e.g. (4, 5) for a portrait 4:5. It sets
+    ratio_n to the short side and ratio_d to the long side (reduced), and negates ratio_d when the
+    crop is oriented the other way than the module input, as darktable's flip does. The input
+    orientation is read from the edges, so they should already frame that aspect. 0/0 is freehand."""
+    if aspect:
+        if ratio_n or ratio_d:
+            raise ValueError("pass either aspect or ratio_n/ratio_d")
+        w, h = aspect
+        if int(w) != w or int(h) != h or w <= 0 or h <= 0:
+            raise ValueError(f"aspect must be two positive ints, got {aspect!r}")
+        g = math.gcd(int(w), int(h))
+        w, h = int(w) // g, int(h) // g
+        ratio_n, ratio_d = min(w, h), max(w, h)
+        input_landscape = w / h * (bottom - top) / (right - left) >= 1
+        if w != h and (w > h) != input_landscape:
+            ratio_d = -ratio_d
     return struct.pack("<4f2i", left, top, right, bottom, ratio_n, ratio_d)
 
 
