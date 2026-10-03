@@ -30,6 +30,7 @@ Requirements: darktable 5.x (tested on 5.6, macOS), Python 3 with `numpy` and `P
 | Tool | `tools/xmp.py` | Decode and append history entries, read and write module params by field name. |
 | Tool | `tools/render.py` | Render through `darktable-cli` in isolation and measure. |
 | Tool | `tools/subject.py` | Bounding box of the main subject on a render, to frame crops by measurement. |
+| Tool | `tools/apply_style.py` | Apply a darktable style to sidecars (blend params, `iop_order_list` for second instances), then prove by render that every module acts. |
 | Tool | `tools/dbsync.py` | Align `library.db` on edited sidecars, dry run by default. |
 
 ## Why this exists
