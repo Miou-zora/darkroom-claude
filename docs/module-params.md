@@ -8,11 +8,15 @@ must be copied from a blob darktable wrote, never guessed.
 |---|---|---|---|
 | `crop` | 3 | 24 B | `float left, top, right, bottom` (0 to 1, relative to the module input, after `flip` and `ashift`), `int ratio_n, ratio_d` |
 | `exposure` | 7 | 28 B | `int mode` (0 manual), `float black`, `float exposure` (EV), `float deflicker_percentile`, `float deflicker_target`, `int compensate_camera_exposure`, `int` (mode, black, exposure confirmed; the rest named from darktable source, untested) |
-| `sigmoid` | 3 | 56 B | `float contrast`, `float skew`, `float display_white`, `float display_black`, ... (contrast and skew confirmed; the rest named from default values only) |
+| `sigmoid` | 3 | 56 B | `float middle_grey_contrast, contrast_skewness, display_white_target, display_black_target`, `int color_processing`, `float hue_preservation, red_inset, red_rotation, green_inset, green_rotation, blue_inset, blue_rotation, purity`, `int base_primaries` (middle_grey_contrast and contrast_skewness confirmed, the rest named from darktable source, untested) |
+| `colorbalancergb` | 5 | 132 B | 33 fields, 32 `float` then `int saturation_formula`: shadows/midtones/highlights/global `_Y,_C,_H`, weights and fulcrums, `chroma_*`, `saturation_*`, `hue_angle`, `brilliance_*`, `vibrance`, `contrast` (saturation_global, vibrance and contrast confirmed, the rest named from darktable source, untested; full order in `tools/modules.json`) |
 | `temperature` | 4 | 20 B | decoded as `float red, green, blue, float`, `int preset`; read only, never written |
 
-Sizes only (copied as whole blobs, fields not individually confirmed): `colorbalancergb` v5
-132 B, `denoiseprofile` v12 416 B, `diffuse` v2 60 B, `channelmixerrgb` v3 160 B.
+Sizes only (copied as whole blobs, fields not individually confirmed): `denoiseprofile` v12
+416 B, `diffuse` v2 60 B, `channelmixerrgb` v3 160 B.
+
+`tools/modules.json` is the machine-readable form of this table; `xmp.get_field`, `set_field` and
+`default_params` read it and refuse a module or version it does not list.
 
 ## Blobs in XMP
 
