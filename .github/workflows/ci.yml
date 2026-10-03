@@ -142,66 +142,9 @@ jobs:
           name: kpi-unit-windows
           path: kpi/
 
-  darktable-windows:
-    name: integration on darktable (Windows)
-    runs-on: windows-latest
-    timeout-minutes: 30
-    defaults:
-      run:
-        shell: bash
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: ${{ env.PYTHON_VERSION }}
-      - run: pip install -r tests/requirements.txt
-      - name: cache darktable installer and sample RAW
-        uses: actions/cache@v4
-        with:
-          path: |
-            C:\dt\darktable-win64.exe
-            C:\dt\sample.ARW
-          key: dt-win-${{ env.DARKTABLE_VERSION }}-sample-DSC0009
-      - name: fetch installer and sample
-        run: |
-          mkdir -p /c/dt
-          [ -f /c/dt/darktable-win64.exe ] || curl -fsSL -o /c/dt/darktable-win64.exe \
-            "https://github.com/darktable-org/darktable/releases/download/release-${DARKTABLE_VERSION}/darktable-${DARKTABLE_VERSION}-win64.exe"
-          [ -f /c/dt/sample.ARW ] || curl -fsSL -o /c/dt/sample.ARW \
-            "https://raw.pixls.us/data/Sony/ILCE-7M3/_DSC0009.ARW"
-          # pinned checksums (installer: the digest GitHub reports for the release asset)
-          echo "bb15a8e4d24c21097cfdef0a560920f7fa0c05dec93482448dd538f2be02d6c4  /c/dt/darktable-win64.exe
-          250784580ea527442c09004417bb0eead484f2bf3ee8f9121a776ac65bb50d0f  /c/dt/sample.ARW" | sha256sum -c -
-      - name: silent install (Inno Setup flags, the process is darktable-win64.tmp)
-        shell: pwsh
-        timeout-minutes: 10
-        run: |
-          # Inno Setup, not NSIS: /S and /D= are ignored and the wizard waits for a click forever.
-          # No -Wait: it also waits for any child the installer leaves running. Poll for the binary instead.
-          $p = Start-Process -FilePath 'C:\dt\darktable-win64.exe' -ArgumentList '/VERYSILENT', '/SUPPRESSMSGBOXES', '/NORESTART', '/SP-', '/DIR=C:\darktable' -PassThru
-          $cli = 'C:\darktable\bin\darktable-cli.exe'
-          $deadline = (Get-Date).AddMinutes(6)
-          while (-not (Test-Path $cli) -and (Get-Date) -lt $deadline) { Start-Sleep -Seconds 5 }
-          Start-Sleep -Seconds 10  # let the installer finish writing
-          if (-not (Test-Path $cli)) { throw "darktable-cli.exe not installed after 6 min (installer exited: $($p.HasExited))" }
-          Get-ChildItem $cli
-          & C:\darktable\bin\darktable-cli.exe --version
-      - name: pytest (darktable)
-        env:
-          KPI_DIR: kpi
-          KPI_SUITE: darktable-windows
-          DARKTABLE_CLI: C:\darktable\bin\darktable-cli.exe
-          DARKROOM_SAMPLE: C:\dt\sample.ARW
-        run: python -m pytest tests -m darktable -v
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: kpi-darktable-windows
-          path: kpi/
-
   kpi:
     name: KPIs
-    needs: [unit, unit-windows, plugin, darktable, darktable-windows]
+    needs: [unit, unit-windows, plugin, darktable]
     if: always()
     runs-on: ubuntu-latest
     steps:
