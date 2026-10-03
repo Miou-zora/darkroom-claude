@@ -38,7 +38,8 @@ A subject that looks fine on a monitor can be unreadable there.
    its background, look at the render and the box drawn on it before trusting it. An `error` or a
    box that spans the frame means nothing was found: fall back to looking.
 4. Crop at the same aspect ratio. In `crop` coordinates, width = height x ratio x (H/W of the
-   module input). Check the result renders at the expected size (off by one pixel is darktable
+   module input). Write it with `xmp.crop_params(..., aspect=(4, 5))` so the darktable GUI keeps the
+   aspect lock; an export is then trimmed to a multiple of the ratio. Check the result renders at the expected size (off by one pixel is darktable
    rounding, harmless).
 5. Re-check at phone size, then at 100% that nothing important is cut.
 

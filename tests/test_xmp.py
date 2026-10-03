@@ -55,3 +55,28 @@ def test_cli_check_warns_on_multi_instance_without_list(tmp_path, minimal_xmp, c
     p = tmp_path / "a.xmp"; p.write_text(x)
     assert xmp.main(["xmp.py", "check", str(p)]) == 0
     assert "WARNING" in capsys.readouterr().out
+
+
+def test_crop_aspect_sets_the_ratio_fields():
+    f = lambda *a, **k: struct.unpack("<4f2i", xmp.crop_params(*a, **k))[4:]
+    assert f(0, 0, 0.5, 0.5, aspect=(4, 5)) == (4, 5)   # (n, d), 4:5 crop of a portrait input
+    assert f(0, 0, 0.5, 0.5, aspect=(8, 10)) == (4, 5)  # reduced
+    assert f(0, 0, 1, 1, aspect=(3, 2)) == (2, 3)         # landscape 3:2 on a landscape input (issue #11)
+    assert f(0, 0, 0.9, 0.9, aspect=(4, 3)) == (3, 4)     # 4:3 crop of a 4:3 input
+    assert f(0, 0, 1, 1, aspect=(1, 1)) == (1, 1)
+    assert f(0, 0, 1, 1) == (0, 0)                         # freehand by default
+
+
+def test_crop_aspect_sign_follows_the_input_orientation():
+    f = lambda *a, **k: struct.unpack("<4f2i", xmp.crop_params(*a, **k))[4:]
+    # 4:3 landscape crop of a 2:3 portrait input: full width, half the height (issue #11: 3,-4)
+    assert f(0, 0.25, 1, 0.75, aspect=(4, 3)) == (3, -4)
+    # 4:5 portrait crop of a 3:2 landscape input
+    assert f(0, 0, 0.5333, 1, aspect=(4, 5)) == (4, -5)
+
+
+def test_crop_aspect_refuses_a_second_source():
+    with pytest.raises(ValueError):
+        xmp.crop_params(0, 0, 1, 1, ratio_n=1, ratio_d=2, aspect=(4, 5))
+    with pytest.raises(ValueError):
+        xmp.crop_params(0, 0, 1, 1, aspect=(0, 5))

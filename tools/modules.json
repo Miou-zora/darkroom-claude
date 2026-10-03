@@ -7,8 +7,10 @@
       {"name": "top", "type": "f", "test": "tests/test_darktable.py::test_crop_edges_are_normalized"},
       {"name": "right", "type": "f", "test": "tests/test_darktable.py::test_crop_edges_are_normalized"},
       {"name": "bottom", "type": "f", "test": "tests/test_darktable.py::test_crop_edges_are_normalized"},
-      {"name": "ratio_n", "type": "i", "test": null},
-      {"name": "ratio_d", "type": "i", "test": null}
+      {"name": "ratio_n", "type": "i", "test": "tests/test_darktable.py::test_crop_ratio_trims_to_the_ratio",
+       "note": "short side of the aspect (4 for 4:5, 2 for 3:2). 0 with |ratio_d| = 1 is original image, 0/0 is freehand. An export trims the crop to a multiple of the ratio on each side; the GUI keeps the lock"},
+      {"name": "ratio_d", "type": "i", "test": "tests/test_darktable.py::test_crop_ratio_trims_to_the_ratio",
+       "note": "long side of the aspect (5 for 4:5, 3 for 3:2). Negative = crop oriented the other way than the module input (3,-4 is landscape 4:3 on a portrait input); the sign is read from darktable source and from sidecars darktable wrote, a render cannot observe it"}
     ]
   },
   "exposure": {
