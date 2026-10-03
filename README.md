@@ -29,6 +29,7 @@ Requirements: darktable 5.x (tested on 5.6, macOS), Python 3 with `numpy` and `P
 | Hook | `guard_darktable_open` | Blocks writes to `.xmp` and `library.db` while darktable is running. |
 | Tool | `tools/xmp.py` | Decode and append history entries, read and write module params by field name. |
 | Tool | `tools/render.py` | Render through `darktable-cli` in isolation and measure. |
+| Tool | `tools/sheet.py` | Labelled contact sheet of renders, `--phone` (390 px wide) and `--pairs` (before/after). |
 | Tool | `tools/subject.py` | Bounding box of the main subject on a render, to frame crops by measurement. |
 | Tool | `tools/dbsync.py` | Align `library.db` on edited sidecars, dry run by default. |
 
