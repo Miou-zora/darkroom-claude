@@ -63,3 +63,30 @@ def darktable_cli():
         if c and os.path.exists(c):
             return c
     pytest.skip("darktable-cli not found (set DARKTABLE_CLI)")
+
+
+@pytest.fixture(scope="session")
+def presets(tmp_path_factory, sample_raw, darktable_cli, minimal_xmp):
+    """darktable's built-in presets, read from the data.db it writes into a throwaway config.
+    Their blobs were written by darktable itself: the reference for layouts and a source of
+    valid starting blobs. Returns preset(module, name=None) -> [(op_version, name, blob)]."""
+    import sqlite3, subprocess
+    import xmp
+    d = tmp_path_factory.mktemp("dtpresets")
+    side = d / "a.xmp"
+    side.write_text(xmp.append(minimal_xmp, "exposure", 7, xmp.exposure_params(0.7)))
+    r = subprocess.run([darktable_cli, sample_raw, str(side), str(d / "o.jpg"), "--width", "100", "--height", "100",
+                        "--core", "--configdir", str(d / "conf"), "--library", str(d / "library.db")],
+                       capture_output=True)
+    db = d / "conf" / "data.db"
+    if not db.exists():
+        pytest.fail(f"darktable wrote no data.db (exit {r.returncode})")
+    con = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+
+    def preset(module, name=None):
+        rows = con.execute("select op_version, name, op_params from presets "
+                           "where operation=? and op_params is not null order by name", (module,)).fetchall()
+        rows = [(v, n.removeprefix("_builtin_"), bytes(b)) for v, n, b in rows
+                if name is None or n.removeprefix("_builtin_") == name]
+        return rows
+    return preset

@@ -1,7 +1,7 @@
 {
   "_doc": "Ratchet: CI fails if a KPI goes below (or above, for budgets) these values. Raise with ci/kpi.py --update-baseline after a green run.",
-  "darktable_tests_run": 14,
+  "darktable_tests_run": 24,
   "pitfalls_covered": 9,
-  "param_fields_confirmed": 11,
+  "param_fields_confirmed": 15,
   "always_on_tokens_budget": 1000
 }

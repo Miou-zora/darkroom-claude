@@ -174,3 +174,87 @@ def test_sigmoid_skew(rend, base):
     neg, mid, pos = (luma(render_module(rend, base, "sigmoid", 3, contrast_skewness=v))
                      for v in (-0.5, 0.0, 0.5))
     assert neg < mid * 0.99 and pos > mid * 1.01
+
+
+def hf_detail(a):
+    """Mean absolute difference to a blurred copy: the small-scale contrast bilat acts on."""
+    from PIL import ImageFilter
+    im = Image.fromarray(a.mean(2).astype("uint8"))
+    return float(np.abs(np.asarray(im).astype(float) - np.asarray(im.filter(ImageFilter.GaussianBlur(4)))).mean())
+
+
+def test_bilat_detail(rend, base):
+    """`midtone`, the next field, also changes small-scale contrast, and more at the low end
+    (detail 0: 0.85 of the default render, midtone 0: 0.47; detail 1: 1.43, midtone 1: 1.07).
+    The ratios tell the two apart, so a swapped offset fails here."""
+    lo, mid, hi = (hf_detail(render_module(rend, base, "bilat", 3, detail=v)) for v in (0.0, 0.25, 1.0))
+    assert 0.7 < lo / mid < 0.95 and hi / mid > 1.25, (lo / mid, hi / mid)
+
+
+def percentiles(a):
+    return np.percentile(0.2126 * a[..., 0] + 0.7152 * a[..., 1] + 0.0722 * a[..., 2], [5, 10, 25, 50, 75, 95])
+
+
+def test_toneequal_bands_follow_tonal_order(rend, base, presets):
+    """Bands sit at -4 (shadows), -3 (midtones), -2 (highlights), -1 EV (whites). Raising one
+    lifts the pixels around its EV first: the percentile that rises most moves up the tonal
+    scale from midtones to highlights to whites. A layout off by one field would break the order."""
+    _, _, blob = presets("toneequal", "compress shadows/highlights | EIGF | soft")[0]
+    for name in ("noise", "ultra_deep_blacks", "deep_blacks", "blacks", "shadows", "midtones", "highlights",
+                 "whites", "speculars", "contrast_boost", "exposure_boost"):
+        blob = xmp.set_field(blob, "toneequal", 2, name, 0.0)
+
+    def render_band(**fields):
+        b = blob
+        for k, v in fields.items():
+            b = xmp.set_field(b, "toneequal", 2, k, v)
+        res, a = rend(xmp.append(base, "toneequal", 2, b))
+        assert res["params_wrong"] == [] and "toneequal" in res["modules_loaded"], res
+        return percentiles(a)
+
+    neutral = render_band()
+    peak = {band: int(np.argmax(render_band(**{band: 1.0}) - neutral)) for band in ("midtones", "highlights", "whites")}
+    assert peak["midtones"] < peak["highlights"] < peak["whites"], peak
+
+
+PRESET_MODULES = ("exposure", "sigmoid", "colorbalancergb", "toneequal", "bilat", "colorequal", "channelmixerrgb")
+
+
+@pytest.mark.parametrize("module", PRESET_MODULES)
+def test_preset_blobs_match_layout(presets, module):
+    """darktable's own presets are the reference: same version, same byte size as modules.json.
+    If this fails after a darktable upgrade, the layout changed and the table is out of date."""
+    layout = xmp.LAYOUTS[module]
+    rows = [(v, n, b) for v, n, b in presets(module) if v == layout["version"]]
+    assert rows, f"no {module} v{layout['version']} preset: the current version moved"
+    assert [n for _, n, b in rows if len(b) != layout["size"]] == []
+
+
+def test_preset_fields_hold_plausible_values(presets):
+    """A field read at the wrong offset gives a denormal float or a huge int. Ranges are
+    generous; they pin the offsets of fields no render test confirms."""
+    def each(module):
+        v = xmp.LAYOUTS[module]["version"]
+        rows = [(n, lambda f, b=b: xmp.get_field(b, module, v, f)) for ver, n, b in presets(module) if ver == v]
+        assert rows, module
+        return rows
+    for n, g in each("colorbalancergb"):
+        assert g("grey_fulcrum") == pytest.approx(0.1845) and g("mask_grey_fulcrum") == pytest.approx(0.1845), n
+        assert g("shadows_weight") == pytest.approx(1.0) and g("highlights_weight") == pytest.approx(1.0), n
+        assert g("saturation_formula") in (0, 1), n
+    for n, g in each("sigmoid"):
+        assert g("display_white_target") == pytest.approx(100.0) and g("display_black_target") == pytest.approx(0.0152), n
+        assert g("color_processing") in (0, 1) and g("base_primaries") in range(5), n
+    for n, g in each("toneequal"):
+        assert all(-4 <= g(b) <= 4 for b in ("noise", "blacks", "shadows", "midtones", "highlights", "speculars")), n
+        assert 0 < g("smoothing") < 10 and 0 < g("feathering") <= 10000 and 1 <= g("iterations") <= 10, n
+        assert g("details") in range(5), n
+    for n, g in each("bilat"):
+        assert g("mode") in (0, 1) and 0 <= g("detail") <= 2 and 0 <= g("midtone") <= 1, n
+    for n, g in each("colorequal"):
+        assert g("use_filter") in (0, 1) and 0 <= g("threshold") < 1, n
+        colors = ("red", "orange", "yellow", "green", "cyan", "blue", "lavender", "magenta")
+        assert all(0.1 < g(f"sat_{c}") < 5 and 0.1 < g(f"bright_{c}") < 5 and abs(g(f"hue_{c}")) < 180 for c in colors), n
+    for n, g in each("channelmixerrgb"):
+        assert g("version") == 2 and 0.2 < g("x") < 0.5 and 0.2 < g("y") < 0.5, n
+        assert 1000 < g("temperature") < 25000 and g("illum_fluo") in range(10) and g("illum_led") in range(10), n
