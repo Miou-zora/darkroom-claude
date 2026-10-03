@@ -46,8 +46,10 @@ def render(raw, xmp, out, size=1080, height=None):
             "--conf", "write_sidecar_files=never", "-d", "params"]
     r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
     loaded, wrong = parse_params_log(r.stdout + r.stderr)
-    return dict(exit=r.returncode, modules_loaded=loaded, params_wrong=wrong,
-                written=os.path.exists(out))
+    res = dict(exit=r.returncode, modules_loaded=loaded, params_wrong=wrong, written=os.path.exists(out))
+    if not res["written"]:
+        res["log_tail"] = (r.stdout + r.stderr)[-600:]  # darktable-cli says why, or where it wrote instead
+    return res
 
 
 def parse_params_log(log):
