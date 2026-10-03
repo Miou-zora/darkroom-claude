@@ -1,4 +1,4 @@
-import io, json, sys
+import io, json, os, sys
 import pytest
 import guard_darktable_open as g
 
@@ -63,7 +63,7 @@ def test_our_tools_are_not_scanned(monkeypatch, tmp_path):
     t = tmp_path / "tools"
     t.mkdir()
     (t / "x.py").write_text("open('a.xmp', 'w').write(x)\n")
-    monkeypatch.setattr(g, "OUR_TOOLS", str(t) + "/")
+    monkeypatch.setattr(g, "OUR_TOOLS", str(t) + os.sep)
     assert g.is_write("Bash", {"command": f"python3 {t}/x.py"}, str(tmp_path)) is False
 
 
