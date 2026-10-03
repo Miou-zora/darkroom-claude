@@ -17,7 +17,17 @@ Tools live in `tools/` at the plugin root (two levels above this skill's base di
 
 1. **Is darktable running?** `pgrep -x darktable`. If yes, stop and ask the user to quit it.
    Check again right before each write, not only at the start: users reopen it between steps.
-   The plugin hook blocks obvious writes, but do not rely on it alone.
+   The plugin hook blocks obvious writes, but do not rely on it alone. What it sees: `cp`, `mv`,
+   `tee`, `sed -i` or `>` aimed at a `.xmp`, SQL writes through `sqlite3` on `library.db`,
+   `dbsync.py --write`, Write/Edit on a sidecar or the DB, and `python` (inline `-c`, heredoc, or a
+   script file it can read) that names a `.xmp` or `library.db` and has a write signal (`open()` in
+   `w`/`a`/`x`/`+` mode, `write_text`, `.write(`, `shutil.copy`/`move`, `os.replace`/`rename`,
+   SQL `insert`/`update`/`delete`). What it does not see: a script that builds the path or the
+   write at run time (`importlib`, `eval`, a path assembled from pieces), a script that runs
+   another script, code reading its input from a pipe or a file the hook cannot open (other
+   machine, relative path after a `cd`), and writes by another process. It also errs the other
+   way: a script given a sidecar path that writes any other file is blocked too. The check is
+   only a net; run `pgrep -x darktable` yourself.
 2. **Back up** every sidecar you will touch (next to it, with a dated suffix) and `library.db`.
    No git on photo folders: a backup is the only undo.
 3. **Read the history**: `python3 tools/xmp.py check FILE.xmp` then `show`. If `history_end`
