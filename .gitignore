@@ -6,3 +6,4 @@ examples/*/tmpxmp/
 examples/*/out/
 examples/*/originals/
 *.phone.png
+evals/results/

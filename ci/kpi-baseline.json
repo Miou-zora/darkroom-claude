@@ -3,5 +3,6 @@
   "darktable_tests_run": 25,
   "pitfalls_covered": 9,
   "param_fields_confirmed": 15,
+  "evals_pass_rate": 0.75,
   "always_on_tokens_budget": 1000
 }

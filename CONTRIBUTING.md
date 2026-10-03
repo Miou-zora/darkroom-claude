@@ -43,6 +43,24 @@ python -m pytest -m darktable        # needs darktable-cli, or set DARKTABLE_CLI
 - CI prints the KPI table in the run summary and fails below `ci/kpi-baseline.json`. When
   a KPI improves, raise the baseline in the same PR (`python3 ci/kpi.py <artifacts> --update-baseline`).
 
+## Evals
+
+`evals/` holds `claude plugin eval` cases (one directory per case: `prompt.md` plus `graders/*.md`)
+that check what Claude does with the skills and the hook, not only what the files say. They cost API
+money, so they are not in the PR checks. Run them from Actions, workflow `evals` (needs the
+`ANTHROPIC_API_KEY` secret), or locally:
+
+```
+pip install -r tests/requirements.txt && python -m pytest tests/test_evals.py   # structure only, free
+ci/fake-darktable.sh start                                                       # Linux only, for the hook cases
+claude plugin eval . --scaffold --allow-tools Write Edit --ablation none --runs 1
+ci/fake-darktable.sh stop
+```
+
+The hook cases need a process named `darktable` (the hook runs `pgrep -x darktable`), hence the fake.
+After a green run, raise `evals_pass_rate` in `ci/kpi-baseline.json` with
+`python3 ci/kpi.py <dir with evals-result.json> --only evals_pass_rate --update-baseline`.
+
 ## Issues
 
 Use the templates: bug report, feature request, research, module parameter layout. Titles
