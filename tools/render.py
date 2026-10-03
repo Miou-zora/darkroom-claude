@@ -38,7 +38,7 @@ def render(raw, xmp, out, size=1080, height=None):
     if os.path.exists(out):
         os.remove(out)
     os.makedirs(CONF, exist_ok=True)
-    cmd = [cli(), raw, xmp, out, "--hq", "true", "--upscale", "false",
+    cmd = [cli(), raw, xmp, dtenv.out_arg(out), "--hq", "true", "--upscale", "false",
            "--apply-custom-presets", "false"]
     if size:
         cmd += ["--width", str(size), "--height", str(height or size)]
