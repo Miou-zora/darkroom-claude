@@ -3,6 +3,7 @@
     darktable_running()  is darktable open right now (pgrep on macOS/Linux, tasklist on Windows)
     config_dir()         darktable's config directory (holds library.db)
     cache_dir()          where our own throwaway darktable config lives
+    out_arg(path)        an output path as darktable-cli must receive it
     cli_candidates()     where darktable-cli may be, best guess first
 
 Keep this file free of imports from the rest of the repo: the hook loads it by path.
@@ -45,6 +46,14 @@ def pid_alive(pid):
         return False
     except OSError:
         return True
+
+
+def out_arg(path):
+    """Output path for darktable-cli. On Windows it runs the path through its variable expansion,
+    which eats backslashes: `C:\\tmp\\a.jpg` is written as `C:tmpa.jpg`, relative to the cwd of drive
+    C:, and the file is not where the caller looks. Forward slashes survive. Input and config
+    paths are not expanded and may keep backslashes."""
+    return str(path).replace("\\", "/") if _win() else str(path)
 
 
 def config_dir():

@@ -1,6 +1,6 @@
 """apply_style against a throwaway data.db with the styles / style_items schema of darktable 5.6.
 Never touches the user's data.db or sidecars: everything lives in tmp_path."""
-import os, re, sqlite3, sys, zlib
+import os, re, shutil, sqlite3, sys, zlib
 import numpy as np
 import pytest
 from PIL import Image
@@ -232,7 +232,7 @@ def test_write_refused_while_darktable_runs(faked, style_db, photo, monkeypatch)
 @pytest.fixture
 def real_photo(tmp_path, sample_raw, darktable_cli, base, monkeypatch):
     monkeypatch.setattr(apply_style, "darktable_running", lambda: False)  # only tmp_path is written
-    raw = tmp_path / "A.ARW"; os.symlink(sample_raw, raw)
+    raw = tmp_path / "A.ARW"; shutil.copy(sample_raw, raw)  # a symlink is not a file darktable-cli can open on Windows
     side = tmp_path / "A.ARW.xmp"; side.write_text(base)
     return str(side)
 

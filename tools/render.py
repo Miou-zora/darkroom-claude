@@ -6,6 +6,8 @@
 - Isolated config dir and in-memory library: never touches the user's library.db.
 - OUT is deleted first: darktable-cli never overwrites, it writes OUT_01.jpg next
   to it, and a tuning loop would silently keep measuring the old file.
+- Windows: darktable-cli drops the backslashes of OUT (variable expansion): it is passed with
+  forward slashes (dtenv.out_arg), else the file lands in `C:name.jpg` and `written` is False.
 - `-d params` is parsed per module: `params_wrong` lists modules whose blob failed to
   decode (those are dropped from the render). Exit code 1 if any.
 - --phone also writes OUT.phone.png at 390 px wide, the size of a feed post on a phone.
@@ -21,6 +23,7 @@ import dtenv
 
 CANDIDATES = dtenv.cli_candidates()
 CONF = os.path.join(dtenv.cache_dir(), "darkroom-claude", "dtconf")
+TIMEOUT = int(os.environ.get("DARKROOM_RENDER_TIMEOUT", 600))  # seconds
 
 
 def cli():
@@ -38,16 +41,28 @@ def render(raw, xmp, out, size=1080, height=None):
     if os.path.exists(out):
         os.remove(out)
     os.makedirs(CONF, exist_ok=True)
-    cmd = [cli(), raw, xmp, out, "--hq", "true", "--upscale", "false",
+    cmd = [cli(), raw, xmp, dtenv.out_arg(out), "--hq", "true", "--upscale", "false",
            "--apply-custom-presets", "false"]
     if size:
         cmd += ["--width", str(size), "--height", str(height or size)]
     cmd += ["--core", "--configdir", CONF, "--library", ":memory:",
             "--conf", "write_sidecar_files=never", "-d", "params"]
-    r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace")
-    loaded, wrong = parse_params_log(r.stdout + r.stderr)
-    return dict(exit=r.returncode, modules_loaded=loaded, params_wrong=wrong,
-                written=os.path.exists(out))
+    if sys.platform == "win32":
+        # The first darktable-cli of a Windows CI job hung in about 3 runs out of 7, right after the
+        # rawspeed init (#31). OpenCL is the suspect (probed there, no GPU on the runner); CPU is also
+        # the one reference path for pixel diffs.
+        cmd.append("--disable-opencl")
+    try:
+        r = subprocess.run(cmd, capture_output=True, text=True, encoding="utf-8", errors="replace", timeout=TIMEOUT)
+        code, log = r.returncode, r.stdout + r.stderr
+    except subprocess.TimeoutExpired as e:  # a hung darktable-cli (crash dialog on Windows) must not hang the caller
+        code, log = -1, "".join(x.decode("utf-8", "replace") if isinstance(x, bytes) else x or "" for x in (e.stdout, e.stderr))
+        log += "\nTIMEOUT after %ss" % TIMEOUT
+    loaded, wrong = parse_params_log(log)
+    res = dict(exit=code, modules_loaded=loaded, params_wrong=wrong, written=os.path.exists(out))
+    if not res["written"]:
+        res["log_tail"] = log[-1500:]  # darktable-cli says why, or where it wrote instead
+    return res
 
 
 def parse_params_log(log):

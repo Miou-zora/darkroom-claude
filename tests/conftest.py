@@ -72,11 +72,11 @@ def presets(tmp_path_factory, sample_raw, darktable_cli, minimal_xmp):
     Their blobs were written by darktable itself: the reference for layouts and a source of
     valid starting blobs. Returns preset(module, name=None) -> [(op_version, name, blob)]."""
     import sqlite3, subprocess
-    import xmp
+    import dtenv, xmp
     d = tmp_path_factory.mktemp("dtpresets")
     side = d / "a.xmp"
     side.write_text(xmp.append(minimal_xmp, "exposure", 7, xmp.exposure_params(0.7)))
-    r = subprocess.run([darktable_cli, sample_raw, str(side), str(d / "o.jpg"), "--width", "100", "--height", "100",
+    r = subprocess.run([darktable_cli, sample_raw, str(side), dtenv.out_arg(d / "o.jpg"), "--width", "100", "--height", "100",
                         "--core", "--configdir", str(d / "conf"), "--library", str(d / "library.db")],
                        capture_output=True)
     db = d / "conf" / "data.db"

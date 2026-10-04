@@ -8,7 +8,7 @@ import os, re, json, shutil, sqlite3, struct, subprocess, base64
 import numpy as np
 import pytest
 from PIL import Image
-import render, xmp
+import dtenv, render, xmp
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 M = xmp.LAYOUTS["_masks"]
@@ -463,7 +463,7 @@ def test_darktable_writes_back_the_same_forms(tmp_path, sample_raw, darktable_cl
     x = masked(mx, shapes, members=members)
     side = tmp_path / "a.xmp"; side.write_text(x)
     out = tmp_path / "o.jpg"
-    r = subprocess.run([darktable_cli, sample_raw, str(side), str(out), "--width", "200", "--height", "200",
+    r = subprocess.run([darktable_cli, sample_raw, str(side), dtenv.out_arg(out), "--width", "200", "--height", "200",
                         "--apply-custom-presets", "true", "--core", "--configdir", str(tmp_path / "conf"), "--library", ":memory:",
                         "--conf", "write_sidecar_files=never", "--conf", "plugins/lighttable/export/metadata_flags=2f"],
                        capture_output=True, text=True)
@@ -494,7 +494,7 @@ def test_library_rows_match_the_layout(tmp_path, sample_raw, darktable_cli, mx, 
     def cli(out, lib):
         if os.path.exists(out):
             os.remove(out)
-        r = subprocess.run([darktable_cli, str(img), str(out), "--width", str(SIZE), "--height", str(SIZE), "--core",
+        r = subprocess.run([darktable_cli, str(img), dtenv.out_arg(out), "--width", str(SIZE), "--height", str(SIZE), "--core",
                             "--configdir", conf, "--library", str(lib), "--conf", "write_sidecar_files=never"],
                            capture_output=True, text=True)
         assert os.path.exists(out), r.stderr[-500:]
